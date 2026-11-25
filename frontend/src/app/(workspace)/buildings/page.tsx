@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Magnifier, Plus, TrashBin } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useUrlFilters, useUrlSearchInput } from "@/hooks/useUrlFilters";
+import { buildApiUrl, buildHref } from "@/lib/url-params";
 import {
   MotionBar,
   PageEntrance,
@@ -34,12 +36,22 @@ interface BuildingItem {
   mtdCost: number;
 }
 
+const DEFAULT_BUILDING_FILTERS = { q: "" };
+
 export default function BuildingsPage() {
   const { user, apiFetch, notify } = useWattWise();
   const isAdmin = user?.role === "Organization Admin";
 
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 280);
+  const { filters, setFilter } = useUrlFilters(DEFAULT_BUILDING_FILTERS);
+  const urlQuery = filters.q;
+  const handleQuerySync = useCallback(
+    (nextQuery: string) => setFilter("q", nextQuery),
+    [setFilter]
+  );
+  const [queryInput, setQueryInput] = useUrlSearchInput(
+    urlQuery,
+    handleQuerySync
+  );
   const [buildings, setBuildings] = useState<BuildingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +71,8 @@ export default function BuildingsPage() {
 
   useEffect(() => {
     let active = true;
-    const qs = debouncedQuery ? `?q=${encodeURIComponent(debouncedQuery)}` : "";
-    apiFetch<{ buildings: BuildingItem[] }>(`/api/buildings${qs}`)
+    const url = buildApiUrl("/api/buildings", { q: urlQuery || undefined });
+    apiFetch<{ buildings: BuildingItem[] }>(url)
       .then((res) => {
         if (!active) return;
         setError(null);
@@ -75,7 +87,7 @@ export default function BuildingsPage() {
     return () => {
       active = false;
     };
-  }, [apiFetch, debouncedQuery, refreshTick]);
+  }, [apiFetch, urlQuery, refreshTick]);
 
   const handleCreate = useCallback(
     async (e: React.FormEvent) => {
@@ -150,8 +162,8 @@ export default function BuildingsPage() {
           <div className="relative">
             <Magnifier className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ww-fg-muted" />
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
               placeholder="Search buildings"
               className="h-9 w-56 rounded-[8px] border border-ww-hairline bg-ww-card pl-9 pr-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
             />
@@ -212,24 +224,39 @@ export default function BuildingsPage() {
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-2 border-y border-ww-hairline py-3 text-[12px]">
-                    <div>
-                      <p className="text-ww-fg-muted">Floors</p>
-                      <p className="mt-0.5 tabular-nums font-medium text-ww-fg">
+                    <Link
+                      href={buildHref("/floors", { buildingId: b._id })}
+                      className="group rounded-[6px] transition-colors hover:text-ww-accent"
+                    >
+                      <p className="text-ww-fg-muted group-hover:text-ww-accent">
+                        Floors
+                      </p>
+                      <p className="mt-0.5 tabular-nums font-medium text-ww-fg group-hover:text-ww-accent">
                         {b.floorsCount}
                       </p>
-                    </div>
-                    <div>
-                      <p className="text-ww-fg-muted">Meters</p>
-                      <p className="mt-0.5 tabular-nums font-medium text-ww-fg">
+                    </Link>
+                    <Link
+                      href={buildHref("/meters", { buildingId: b._id })}
+                      className="group rounded-[6px] transition-colors hover:text-ww-accent"
+                    >
+                      <p className="text-ww-fg-muted group-hover:text-ww-accent">
+                        Meters
+                      </p>
+                      <p className="mt-0.5 tabular-nums font-medium text-ww-fg group-hover:text-ww-accent">
                         {b.metersCount}
                       </p>
-                    </div>
-                    <div>
-                      <p className="text-ww-fg-muted">Area</p>
-                      <p className="mt-0.5 tabular-nums font-medium text-ww-fg">
+                    </Link>
+                    <Link
+                      href={buildHref("/records", { buildingId: b._id })}
+                      className="group rounded-[6px] transition-colors hover:text-ww-accent"
+                    >
+                      <p className="text-ww-fg-muted group-hover:text-ww-accent">
+                        Area
+                      </p>
+                      <p className="mt-0.5 tabular-nums font-medium text-ww-fg group-hover:text-ww-accent">
                         {(b.totalSqFt / 1000).toFixed(0)}k sq ft
                       </p>
-                    </div>
+                    </Link>
                   </div>
 
                   <div className="mt-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Magnifier,
   Plus,
@@ -10,8 +10,9 @@ import {
 } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useUrlFilters, useUrlSearchInput } from "@/hooks/useUrlFilters";
 import { downloadCsvExport } from "@/lib/api";
+import { buildApiUrl } from "@/lib/url-params";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
 import {
   StatusBadge,
@@ -48,19 +49,34 @@ interface RefOption {
   meterCode?: string;
 }
 
+const DEFAULT_RECORD_FILTERS = {
+  q: "",
+  preset: "90d",
+  buildingId: "all",
+  anomalyOnly: false,
+  sortBy: "timestamp",
+  sortDir: "desc",
+  page: 1,
+};
+
 export default function EnergyRecordsPage() {
   const { user, token, apiFetch, notify } = useWattWise();
   const canCreate =
     user?.role === "Organization Admin" || user?.role === "Facility Manager";
 
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 320);
-  const [preset, setPreset] = useState("90d");
-  const [buildingId, setBuildingId] = useState("all");
-  const [anomalyOnly, setAnomalyOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("timestamp");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(1);
+  const { filters, setFilter, setFilters } = useUrlFilters(
+    DEFAULT_RECORD_FILTERS
+  );
+  const { q: urlQuery, preset, buildingId, anomalyOnly, sortBy, page } = filters;
+  const sortDir: "asc" | "desc" = filters.sortDir === "asc" ? "asc" : "desc";
+
+  const handleQuerySync = useCallback(
+    (nextQuery: string) => {
+      setFilters({ q: nextQuery, page: 1 });
+    },
+    [setFilters]
+  );
+  const [queryInput, setQueryInput] = useUrlSearchInput(urlQuery, handleQuerySync);
 
   const [records, setRecords] = useState<EnergyRecordItem[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>({
@@ -107,20 +123,18 @@ export default function EnergyRecordsPage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams({
-      page: String(page),
-      limit: "25",
+    const url = buildApiUrl("/api/energy-records", {
+      page,
+      limit: 25,
       preset,
       sortBy,
       sortDir,
+      q: urlQuery || undefined,
+      buildingId,
+      anomalyOnly: anomalyOnly ? "true" : undefined,
     });
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (buildingId !== "all") params.set("buildingId", buildingId);
-    if (anomalyOnly) params.set("anomalyOnly", "true");
 
-    apiFetch<{ records: EnergyRecordItem[]; pagination: PaginationMeta }>(
-      `/api/energy-records?${params.toString()}`
-    )
+    apiFetch<{ records: EnergyRecordItem[]; pagination: PaginationMeta }>(url)
       .then((res) => {
         if (!active) return;
         setError(null);
@@ -144,18 +158,16 @@ export default function EnergyRecordsPage() {
     anomalyOnly,
     sortBy,
     sortDir,
-    debouncedQuery,
+    urlQuery,
     refreshTick,
   ]);
 
   function handleSort(field: string) {
     if (sortBy === field) {
-      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+      setFilters({ sortDir: sortDir === "desc" ? "asc" : "desc", page: 1 });
     } else {
-      setSortBy(field);
-      setSortDir("desc");
+      setFilters({ sortBy: field, sortDir: "desc", page: 1 });
     }
-    setPage(1);
   }
 
   async function handleCreateRecord(e: React.FormEvent) {
@@ -194,15 +206,13 @@ export default function EnergyRecordsPage() {
 
   async function handleExport() {
     if (!token) return;
-    const params = new URLSearchParams({ preset });
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (buildingId !== "all") params.set("buildingId", buildingId);
-    if (anomalyOnly) params.set("anomalyOnly", "true");
-    await downloadCsvExport(
-      `/api/energy-records/export?${params.toString()}`,
-      token,
-      "wattwise-energy-records.csv"
-    );
+    const exportUrl = buildApiUrl("/api/energy-records/export", {
+      preset,
+      q: urlQuery || undefined,
+      buildingId,
+      anomalyOnly: anomalyOnly ? "true" : undefined,
+    });
+    await downloadCsvExport(exportUrl, token, "wattwise-energy-records.csv");
     notify("CSV export downloaded", "positive");
   }
 
@@ -247,11 +257,8 @@ export default function EnergyRecordsPage() {
         <div className="relative">
           <Magnifier className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ww-fg-muted" />
           <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
+            value={queryInput}
+            onChange={(e) => setQueryInput(e.target.value)}
             placeholder="Search meter, building, dept"
             className="h-9 w-60 rounded-[8px] border border-ww-hairline bg-ww-card pl-9 pr-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           />
@@ -261,8 +268,7 @@ export default function EnergyRecordsPage() {
           aria-label="Date range preset"
           value={preset}
           onChange={(e) => {
-            setPreset(e.target.value);
-            setPage(1);
+            setFilters({ preset: e.target.value, page: 1 });
           }}
           className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
         >
@@ -276,8 +282,7 @@ export default function EnergyRecordsPage() {
           aria-label="Filter by building"
           value={buildingId}
           onChange={(e) => {
-            setBuildingId(e.target.value);
-            setPage(1);
+            setFilters({ buildingId: e.target.value, page: 1 });
           }}
           className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
         >
@@ -292,8 +297,7 @@ export default function EnergyRecordsPage() {
         <button
           type="button"
           onClick={() => {
-            setAnomalyOnly((v) => !v);
-            setPage(1);
+            setFilters({ anomalyOnly: !anomalyOnly, page: 1 });
           }}
           className={`h-9 rounded-[8px] border px-3 text-[13px] transition-colors ${
             anomalyOnly
@@ -406,7 +410,7 @@ export default function EnergyRecordsPage() {
                 variant="outline"
                 size="sm"
                 isDisabled={page <= 1}
-                onPress={() => setPage((p) => Math.max(1, p - 1))}
+                onPress={() => setFilter("page", Math.max(1, page - 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
@@ -416,7 +420,7 @@ export default function EnergyRecordsPage() {
                 size="sm"
                 isDisabled={page >= pagination.totalPages}
                 onPress={() =>
-                  setPage((p) => Math.min(pagination.totalPages, p + 1))
+                  setFilter("page", Math.min(pagination.totalPages, page + 1))
                 }
               >
                 Next

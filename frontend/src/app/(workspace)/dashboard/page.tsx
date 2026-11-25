@@ -14,6 +14,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { downloadCsvExport } from "@/lib/api";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { buildApiUrl, buildDateFilterRecord } from "@/lib/url-params";
 import {
   MotionBar,
   PageEntrance,
@@ -123,16 +125,24 @@ const PRESETS = [
   { id: "90d", label: "90 days" },
 ] as const;
 
+const DEFAULT_DASHBOARD_FILTERS = {
+  preset: "30d",
+  startDate: "",
+  endDate: "",
+  buildingId: "all",
+  departmentId: "all",
+  chart: "area",
+};
+
 export default function DashboardPage() {
   const { user, organization, token, apiFetch, refreshToken, notify } =
     useWattWise();
 
-  const [preset, setPreset] = useState<string>("30d");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [buildingId, setBuildingId] = useState<string>("all");
-  const [departmentId, setDepartmentId] = useState<string>("all");
-  const [chartMode, setChartMode] = useState<"area" | "bar">("area");
+  const { filters, setFilter, setFilters } = useUrlFilters(
+    DEFAULT_DASHBOARD_FILTERS
+  );
+  const { preset, startDate, endDate, buildingId, departmentId } = filters;
+  const chartMode: "area" | "bar" = filters.chart === "bar" ? "bar" : "area";
 
   const [buildings, setBuildings] = useState<BuildingOption[]>([]);
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
@@ -150,16 +160,16 @@ export default function DashboardPage() {
   const canTriageAlerts = user?.role !== "Viewer";
 
   const buildOverviewQuery = useCallback(() => {
-    const params = new URLSearchParams();
-    if (startDate && endDate) {
-      params.set("startDate", startDate);
-      params.set("endDate", endDate);
-    } else {
-      params.set("preset", preset);
-    }
-    if (buildingId !== "all") params.set("buildingId", buildingId);
-    if (departmentId !== "all") params.set("departmentId", departmentId);
-    return `/api/dashboard/overview?${params.toString()}`;
+    return buildApiUrl(
+      "/api/dashboard/overview",
+      buildDateFilterRecord({
+        preset,
+        startDate,
+        endDate,
+        buildingId,
+        departmentId,
+      })
+    );
   }, [preset, startDate, endDate, buildingId, departmentId]);
 
   const loadDimensions = useCallback(async () => {
@@ -285,8 +295,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ organizationId: nextOrgId }),
       });
       await refreshToken();
-      setBuildingId("all");
-      setDepartmentId("all");
+      setFilters({ buildingId: "all", departmentId: "all" });
       await Promise.all([loadDimensions(), loadOverview(true)]);
       notify("Switched active organization", "positive");
     } catch (err) {
@@ -319,18 +328,19 @@ export default function DashboardPage() {
   async function handleExportCsv() {
     if (!token) return;
     try {
-      const params = new URLSearchParams();
-      if (startDate && endDate) {
-        params.set("startDate", startDate);
-        params.set("endDate", endDate);
-      } else {
-        params.set("preset", preset);
-      }
-      if (buildingId !== "all") params.set("buildingId", buildingId);
-      if (departmentId !== "all") params.set("departmentId", departmentId);
+      const exportUrl = buildApiUrl(
+        "/api/energy-records/export",
+        buildDateFilterRecord({
+          preset,
+          startDate,
+          endDate,
+          buildingId,
+          departmentId,
+        })
+      );
 
       await downloadCsvExport(
-        `/api/energy-records/export?${params.toString()}`,
+        exportUrl,
         token,
         `wattwise-${organization?.slug || "export"}.csv`
       );
@@ -440,9 +450,7 @@ export default function DashboardPage() {
                 key={p.id}
                 type="button"
                 onClick={() => {
-                  setStartDate("");
-                  setEndDate("");
-                  setPreset(p.id);
+                  setFilters({ startDate: "", endDate: "", preset: p.id });
                 }}
                 className={`relative h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
                   active
@@ -468,7 +476,7 @@ export default function DashboardPage() {
             type="date"
             aria-label="Start date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => setFilter("startDate", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-2.5 font-mono text-[12px] text-ww-fg outline-none focus:border-ww-accent"
           />
           <span className="text-[12px] text-ww-fg-muted">to</span>
@@ -476,7 +484,7 @@ export default function DashboardPage() {
             type="date"
             aria-label="End date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(e) => setFilter("endDate", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-2.5 font-mono text-[12px] text-ww-fg outline-none focus:border-ww-accent"
           />
 
@@ -484,8 +492,7 @@ export default function DashboardPage() {
             aria-label="Filter by building"
             value={buildingId}
             onChange={(e) => {
-              setBuildingId(e.target.value);
-              setDepartmentId("all");
+              setFilters({ buildingId: e.target.value, departmentId: "all" });
             }}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
@@ -500,7 +507,7 @@ export default function DashboardPage() {
           <select
             aria-label="Filter by department"
             value={departmentId}
-            onChange={(e) => setDepartmentId(e.target.value)}
+            onChange={(e) => setFilter("departmentId", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="all">All departments</option>
@@ -648,7 +655,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-1 rounded-[8px] border border-ww-hairline bg-ww-bg/50 p-1">
                     <button
                       type="button"
-                      onClick={() => setChartMode("area")}
+                      onClick={() => setFilter("chart", "area")}
                       className={`relative h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
                         chartMode === "area"
                           ? "font-medium text-ww-fg"
@@ -666,7 +673,7 @@ export default function DashboardPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setChartMode("bar")}
+                      onClick={() => setFilter("chart", "bar")}
                       className={`relative h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
                         chartMode === "bar"
                           ? "font-medium text-ww-fg"

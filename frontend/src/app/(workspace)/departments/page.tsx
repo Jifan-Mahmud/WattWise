@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Magnifier, Plus, TrashBin } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useUrlFilters, useUrlSearchInput } from "@/hooks/useUrlFilters";
+import { buildApiUrl } from "@/lib/url-params";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
 import { LoadingPanel, ErrorPanel, EmptyPanel } from "@/components/ui/DataState";
 import { ModalFrame } from "@/components/ui/ModalFrame";
@@ -35,13 +36,25 @@ interface FloorRef {
   name: string;
 }
 
+const DEFAULT_DEPARTMENT_FILTERS = {
+  q: "",
+  buildingId: "all",
+};
+
 export default function DepartmentsPage() {
   const { user, apiFetch, notify } = useWattWise();
   const isAdmin = user?.role === "Organization Admin";
 
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 280);
-  const [buildingId, setBuildingId] = useState("all");
+  const { filters, setFilter } = useUrlFilters(DEFAULT_DEPARTMENT_FILTERS);
+  const { q: urlQuery, buildingId } = filters;
+  const handleQuerySync = useCallback(
+    (nextQuery: string) => setFilter("q", nextQuery),
+    [setFilter]
+  );
+  const [queryInput, setQueryInput] = useUrlSearchInput(
+    urlQuery,
+    handleQuerySync
+  );
   const [departments, setDepartments] = useState<DepartmentItem[]>([]);
   const [buildings, setBuildings] = useState<BuildingRef[]>([]);
   const [floors, setFloors] = useState<FloorRef[]>([]);
@@ -63,14 +76,13 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams();
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (buildingId !== "all") params.set("buildingId", buildingId);
+    const deptUrl = buildApiUrl("/api/departments", {
+      q: urlQuery || undefined,
+      buildingId,
+    });
 
     Promise.all([
-      apiFetch<{ departments: DepartmentItem[] }>(
-        `/api/departments?${params.toString()}`
-      ),
+      apiFetch<{ departments: DepartmentItem[] }>(deptUrl),
       apiFetch<{ buildings: BuildingRef[] }>("/api/buildings"),
       apiFetch<{ floors: FloorRef[] }>("/api/floors"),
     ])
@@ -98,7 +110,7 @@ export default function DepartmentsPage() {
     return () => {
       active = false;
     };
-  }, [apiFetch, debouncedQuery, buildingId, refreshTick]);
+  }, [apiFetch, urlQuery, buildingId, refreshTick]);
 
   const modalFloors = floors.filter((f) => f.buildingId === form.buildingId);
 
@@ -147,8 +159,8 @@ export default function DepartmentsPage() {
           <div className="relative">
             <Magnifier className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ww-fg-muted" />
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
               placeholder="Search departments"
               className="h-9 w-48 rounded-[8px] border border-ww-hairline bg-ww-card pl-9 pr-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
             />
@@ -157,7 +169,7 @@ export default function DepartmentsPage() {
           <select
             aria-label="Filter departments by building"
             value={buildingId}
-            onChange={(e) => setBuildingId(e.target.value)}
+            onChange={(e) => setFilter("buildingId", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="all">All buildings</option>

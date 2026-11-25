@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, TrashBin } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
 import { LoadingPanel, ErrorPanel, EmptyPanel } from "@/components/ui/DataState";
 import { ModalFrame } from "@/components/ui/ModalFrame";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { buildApiUrl, buildHref } from "@/lib/url-params";
 
 interface FloorItem {
   _id: string;
@@ -23,11 +26,14 @@ interface BuildingRef {
   name: string;
 }
 
+const DEFAULT_FLOOR_FILTERS = { buildingId: "all" };
+
 export default function FloorsPage() {
   const { user, apiFetch, notify } = useWattWise();
   const isAdmin = user?.role === "Organization Admin";
 
-  const [buildingId, setBuildingId] = useState("all");
+  const { filters, setFilter } = useUrlFilters(DEFAULT_FLOOR_FILTERS);
+  const { buildingId } = filters;
   const [floors, setFloors] = useState<FloorItem[]>([]);
   const [buildings, setBuildings] = useState<BuildingRef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,9 +51,9 @@ export default function FloorsPage() {
 
   useEffect(() => {
     let active = true;
-    const qs = buildingId !== "all" ? `?buildingId=${buildingId}` : "";
+    const floorsUrl = buildApiUrl("/api/floors", { buildingId });
     Promise.all([
-      apiFetch<{ floors: FloorItem[] }>(`/api/floors${qs}`),
+      apiFetch<{ floors: FloorItem[] }>(floorsUrl),
       apiFetch<{ buildings: BuildingRef[] }>("/api/buildings"),
     ])
       .then(([fRes, bRes]) => {
@@ -116,7 +122,7 @@ export default function FloorsPage() {
           <select
             aria-label="Filter floors by building"
             value={buildingId}
-            onChange={(e) => setBuildingId(e.target.value)}
+            onChange={(e) => setFilter("buildingId", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="all">All buildings</option>
@@ -178,7 +184,12 @@ export default function FloorsPage() {
                     {f.areaSqFt.toLocaleString()}
                   </td>
                   <td className="px-5 py-3.5 text-right tabular-nums text-ww-fg-secondary">
-                    {f.departmentsCount}
+                    <Link
+                      href={buildHref("/departments", { buildingId: f.buildingId })}
+                      className="underline-offset-4 hover:text-ww-accent hover:underline"
+                    >
+                      {f.departmentsCount}
+                    </Link>
                   </td>
                   {isAdmin && (
                     <td className="px-5 py-3.5 text-right">

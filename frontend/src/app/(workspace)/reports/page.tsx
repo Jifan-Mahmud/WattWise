@@ -5,6 +5,8 @@ import { FileArrowDown, Printer, Plus, TrashBin } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { downloadCsvExport } from "@/lib/api";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { buildApiUrl, buildDateFilterRecord } from "@/lib/url-params";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
 import {
   StatusBadge,
@@ -51,15 +53,22 @@ interface RefBuilding {
   name: string;
 }
 
+const DEFAULT_REPORT_FILTERS = {
+  preset: "30d",
+  startDate: "",
+  endDate: "",
+  buildingId: "all",
+};
+
 export default function ReportsPage() {
   const { user, token, apiFetch, notify } = useWattWise();
   const canSchedule =
     user?.role === "Organization Admin" || user?.role === "Facility Manager";
 
-  const [preset, setPreset] = useState("30d");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [buildingId, setBuildingId] = useState("all");
+  const { filters, setFilter, setFilters } = useUrlFilters(
+    DEFAULT_REPORT_FILTERS
+  );
+  const { preset, startDate, endDate, buildingId } = filters;
 
   const [buildings, setBuildings] = useState<RefBuilding[]>([]);
   const [summary, setSummary] = useState<ReportSummary | null>(null);
@@ -79,17 +88,13 @@ export default function ReportsPage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams();
-    if (startDate && endDate) {
-      params.set("startDate", startDate);
-      params.set("endDate", endDate);
-    } else {
-      params.set("preset", preset);
-    }
-    if (buildingId !== "all") params.set("buildingId", buildingId);
+    const summaryUrl = buildApiUrl(
+      "/api/reports/summary",
+      buildDateFilterRecord({ preset, startDate, endDate, buildingId })
+    );
 
     Promise.all([
-      apiFetch<ReportSummary>(`/api/reports/summary?${params.toString()}`),
+      apiFetch<ReportSummary>(summaryUrl),
       apiFetch<{ schedules: ScheduledReport[] }>("/api/reports/scheduled"),
       apiFetch<{ buildings: RefBuilding[] }>("/api/buildings"),
     ])
@@ -113,19 +118,11 @@ export default function ReportsPage() {
 
   async function handleExportCsv() {
     if (!token) return;
-    const params = new URLSearchParams();
-    if (startDate && endDate) {
-      params.set("startDate", startDate);
-      params.set("endDate", endDate);
-    } else {
-      params.set("preset", preset);
-    }
-    if (buildingId !== "all") params.set("buildingId", buildingId);
-    await downloadCsvExport(
-      `/api/energy-records/export?${params.toString()}`,
-      token,
-      "wattwise-custom-report.csv"
+    const exportUrl = buildApiUrl(
+      "/api/energy-records/export",
+      buildDateFilterRecord({ preset, startDate, endDate, buildingId })
     );
+    await downloadCsvExport(exportUrl, token, "wattwise-custom-report.csv");
     notify("CSV report downloaded", "positive");
   }
 
@@ -208,9 +205,7 @@ export default function ReportsPage() {
           aria-label="Date preset"
           value={preset}
           onChange={(e) => {
-            setStartDate("");
-            setEndDate("");
-            setPreset(e.target.value);
+            setFilters({ startDate: "", endDate: "", preset: e.target.value });
           }}
           className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
         >
@@ -225,7 +220,7 @@ export default function ReportsPage() {
           type="date"
           aria-label="Start date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => setFilter("startDate", e.target.value)}
           className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-2.5 font-mono text-[12px] text-ww-fg outline-none focus:border-ww-accent"
         />
         <span className="text-[12px] text-ww-fg-muted">to</span>
@@ -233,14 +228,14 @@ export default function ReportsPage() {
           type="date"
           aria-label="End date"
           value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
+          onChange={(e) => setFilter("endDate", e.target.value)}
           className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-2.5 font-mono text-[12px] text-ww-fg outline-none focus:border-ww-accent"
         />
 
         <select
           aria-label="Building filter"
           value={buildingId}
-          onChange={(e) => setBuildingId(e.target.value)}
+          onChange={(e) => setFilter("buildingId", e.target.value)}
           className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
         >
           <option value="all">All buildings</option>

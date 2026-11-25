@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Magnifier, Plus, TrashBin } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useUrlFilters, useUrlSearchInput } from "@/hooks/useUrlFilters";
+import { buildApiUrl, buildHref } from "@/lib/url-params";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
 import {
   StatusBadge,
@@ -50,15 +52,27 @@ const METER_TYPES = [
   "Chiller",
 ] as const;
 
+const DEFAULT_METER_FILTERS = {
+  q: "",
+  buildingId: "all",
+  health: "all",
+};
+
 export default function MetersPage() {
   const { user, apiFetch, notify } = useWattWise();
   const canEdit =
     user?.role === "Organization Admin" || user?.role === "Facility Manager";
 
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 280);
-  const [buildingId, setBuildingId] = useState("all");
-  const [healthFilter, setHealthFilter] = useState("all");
+  const { filters, setFilter } = useUrlFilters(DEFAULT_METER_FILTERS);
+  const { q: urlQuery, buildingId, health: healthFilter } = filters;
+  const handleQuerySync = useCallback(
+    (nextQuery: string) => setFilter("q", nextQuery),
+    [setFilter]
+  );
+  const [queryInput, setQueryInput] = useUrlSearchInput(
+    urlQuery,
+    handleQuerySync
+  );
   const [meters, setMeters] = useState<MeterItem[]>([]);
   const [buildings, setBuildings] = useState<RefBuilding[]>([]);
   const [departments, setDepartments] = useState<RefDepartment[]>([]);
@@ -82,13 +96,14 @@ export default function MetersPage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams();
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (buildingId !== "all") params.set("buildingId", buildingId);
-    if (healthFilter !== "all") params.set("healthStatus", healthFilter);
+    const metersUrl = buildApiUrl("/api/meters", {
+      q: urlQuery || undefined,
+      buildingId,
+      healthStatus: healthFilter,
+    });
 
     Promise.all([
-      apiFetch<{ meters: MeterItem[] }>(`/api/meters?${params.toString()}`),
+      apiFetch<{ meters: MeterItem[] }>(metersUrl),
       apiFetch<{ buildings: RefBuilding[] }>("/api/buildings"),
       apiFetch<{ departments: RefDepartment[] }>("/api/departments"),
     ])
@@ -116,7 +131,7 @@ export default function MetersPage() {
     return () => {
       active = false;
     };
-  }, [apiFetch, debouncedQuery, buildingId, healthFilter, refreshTick]);
+  }, [apiFetch, urlQuery, buildingId, healthFilter, refreshTick]);
 
   const modalDepts = departments.filter((d) => d.buildingId === form.buildingId);
 
@@ -180,8 +195,8 @@ export default function MetersPage() {
           <div className="relative">
             <Magnifier className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ww-fg-muted" />
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
               placeholder="Search meters"
               className="h-9 w-44 rounded-[8px] border border-ww-hairline bg-ww-card pl-9 pr-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
             />
@@ -190,7 +205,7 @@ export default function MetersPage() {
           <select
             aria-label="Filter meters by building"
             value={buildingId}
-            onChange={(e) => setBuildingId(e.target.value)}
+            onChange={(e) => setFilter("buildingId", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="all">All buildings</option>
@@ -204,7 +219,7 @@ export default function MetersPage() {
           <select
             aria-label="Filter meters by health status"
             value={healthFilter}
-            onChange={(e) => setHealthFilter(e.target.value)}
+            onChange={(e) => setFilter("health", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="all">All health</option>
@@ -256,9 +271,12 @@ export default function MetersPage() {
               {meters.map((m) => (
                 <tr key={m._id} className="hover:bg-ww-raised/40">
                   <td className="px-5 py-3.5">
-                    <p className="font-mono text-[12px] font-medium text-ww-fg">
+                    <Link
+                      href={buildHref("/records", { q: m.meterCode })}
+                      className="font-mono text-[12px] font-medium text-ww-fg underline-offset-4 hover:text-ww-accent hover:underline"
+                    >
                       {m.meterCode}
-                    </p>
+                    </Link>
                     <p className="text-[12px] text-ww-fg-secondary">{m.name}</p>
                   </td>
                   <td className="px-5 py-3.5 text-ww-fg-secondary">{m.meterType}</td>

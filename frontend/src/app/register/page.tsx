@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, TriangleExclamation } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { signUp } from "@/lib/auth-client";
 import { useWattWise, type UserRole } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
+import { buildHref, sanitizeRedirectPath } from "@/lib/url-params";
 
 const ROLES: UserRole[] = [
   "Organization Admin",
@@ -17,16 +18,24 @@ const ROLES: UserRole[] = [
   "Viewer",
 ];
 
-export default function RegisterPage() {
+function RegisterFormPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refreshToken, notify } = useWattWise();
+
+  const redirectTarget = sanitizeRedirectPath(searchParams.get("redirect"));
+  const paramRole = searchParams.get("role") as UserRole | null;
+  const initialRole: UserRole =
+    paramRole && ROLES.includes(paramRole) ? paramRole : "Organization Admin";
+  const initialMode = searchParams.get("mode") === "create" ? "create" : "join";
+  const initialOrg = searchParams.get("org") || "";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("Organization Admin");
-  const [orgMode, setOrgMode] = useState<"join" | "create">("join");
-  const [organizationName, setOrganizationName] = useState("");
+  const [role, setRole] = useState<UserRole>(initialRole);
+  const [orgMode, setOrgMode] = useState<"join" | "create">(initialMode);
+  const [organizationName, setOrganizationName] = useState(initialOrg);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,12 +74,14 @@ export default function RegisterPage() {
 
       if (!profileRes.ok) {
         const errBody = await profileRes.json().catch(() => ({}));
-        throw new Error(errBody.error || "Unable to initialize organization profile.");
+        throw new Error(
+          errBody.error || "Unable to initialize organization profile."
+        );
       }
 
       await refreshToken();
       notify("Account created", "positive");
-      router.push("/dashboard");
+      router.push(redirectTarget);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed.");
     } finally {
@@ -78,6 +89,166 @@ export default function RegisterPage() {
     }
   }
 
+  return (
+    <div className="ww-panel p-6 sm:p-8 lg:col-span-5">
+      <h1 className="text-[26px] font-medium tracking-[-0.02em] text-ww-fg">
+        Create WattWise account
+      </h1>
+      <p className="mt-1.5 text-[14px] text-ww-fg-secondary">
+        Register an operator profile or provision a new organization.
+      </p>
+
+      {error && (
+        <div className="mt-5 flex items-start gap-2.5 rounded-[8px] border border-ww-negative/30 bg-ww-negative-soft p-3 text-[13px] text-ww-negative">
+          <TriangleExclamation className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleRegister} className="mt-6 space-y-4">
+        <div>
+          <label
+            htmlFor="reg-name"
+            className="block text-[13px] font-medium text-ww-fg-secondary"
+          >
+            Full name
+          </label>
+          <input
+            id="reg-name"
+            type="text"
+            required
+            minLength={2}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Jordan Blake"
+            className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="reg-email"
+            className="block text-[13px] font-medium text-ww-fg-secondary"
+          >
+            Work email
+          </label>
+          <input
+            id="reg-email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="jordan@company.com"
+            className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="reg-password"
+            className="block text-[13px] font-medium text-ww-fg-secondary"
+          >
+            Password
+          </label>
+          <input
+            id="reg-password"
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Minimum 8 characters"
+            className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="reg-role"
+            className="block text-[13px] font-medium text-ww-fg-secondary"
+          >
+            Role
+          </label>
+          <select
+            id="reg-role"
+            value={role}
+            onChange={(e) => setRole(e.target.value as UserRole)}
+            className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <span className="block text-[13px] font-medium text-ww-fg-secondary">
+            Organization workspace
+          </span>
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setOrgMode("join")}
+              className={`h-9 rounded-[8px] border px-3 text-[13px] transition-colors ${
+                orgMode === "join"
+                  ? "border-ww-accent bg-ww-accent-soft text-ww-fg"
+                  : "border-ww-hairline bg-ww-bg text-ww-fg-secondary"
+              }`}
+            >
+              Join Northgrid demo
+            </button>
+            <button
+              type="button"
+              onClick={() => setOrgMode("create")}
+              className={`h-9 rounded-[8px] border px-3 text-[13px] transition-colors ${
+                orgMode === "create"
+                  ? "border-ww-accent bg-ww-accent-soft text-ww-fg"
+                  : "border-ww-hairline bg-ww-bg text-ww-fg-secondary"
+              }`}
+            >
+              New organization
+            </button>
+          </div>
+          {orgMode === "create" && (
+            <input
+              type="text"
+              required
+              value={organizationName}
+              onChange={(e) => setOrganizationName(e.target.value)}
+              placeholder="Acme Industrial Campus"
+              className="mt-2.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
+            />
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          fullWidth
+          isDisabled={loading}
+          className="mt-2 h-10 rounded-[8px] bg-ww-fg text-[14px] font-medium text-ww-bg"
+        >
+          {loading ? "Creating account…" : "Create account"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-[13px] text-ww-fg-secondary">
+        Already have an account?{" "}
+        <Link
+          href={buildHref("/login", {
+            redirect: redirectTarget !== "/dashboard" ? redirectTarget : undefined,
+          })}
+          className="font-medium text-ww-fg underline underline-offset-4"
+        >
+          Sign in
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col bg-ww-bg text-ww-fg">
       <header className="border-b border-ww-hairline">
@@ -98,164 +269,20 @@ export default function RegisterPage() {
 
       <main className="mx-auto flex w-full max-w-[1120px] flex-1 items-center px-4 py-12 sm:px-6">
         <PageEntrance className="grid w-full grid-cols-1 gap-8 lg:grid-cols-12">
-          {/* Left: Registration Form */}
-          <div className="ww-panel p-6 sm:p-8 lg:col-span-5">
-            <h1 className="text-[26px] font-medium tracking-[-0.02em] text-ww-fg">
-            Create WattWise account
-          </h1>
-          <p className="mt-1.5 text-[14px] text-ww-fg-secondary">
-            Register an operator profile or provision a new organization.
-          </p>
-
-          {error && (
-            <div className="mt-5 flex items-start gap-2.5 rounded-[8px] border border-ww-negative/30 bg-ww-negative-soft p-3 text-[13px] text-ww-negative">
-              <TriangleExclamation className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleRegister} className="mt-6 space-y-4">
-            <div>
-              <label
-                htmlFor="reg-name"
-                className="block text-[13px] font-medium text-ww-fg-secondary"
-              >
-                Full name
-              </label>
-              <input
-                id="reg-name"
-                type="text"
-                required
-                minLength={2}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jordan Blake"
-                className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="reg-email"
-                className="block text-[13px] font-medium text-ww-fg-secondary"
-              >
-                Work email
-              </label>
-              <input
-                id="reg-email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jordan@company.com"
-                className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="reg-password"
-                className="block text-[13px] font-medium text-ww-fg-secondary"
-              >
-                Password
-              </label>
-              <input
-                id="reg-password"
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
-                className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="reg-role"
-                className="block text-[13px] font-medium text-ww-fg-secondary"
-              >
-                Role
-              </label>
-              <select
-                id="reg-role"
-                value={role}
-                onChange={(e) => setRole(e.target.value as UserRole)}
-                className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <span className="block text-[13px] font-medium text-ww-fg-secondary">
-                Organization workspace
-              </span>
-              <div className="mt-1.5 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOrgMode("join")}
-                  className={`h-9 rounded-[8px] border px-3 text-[13px] transition-colors ${
-                    orgMode === "join"
-                      ? "border-ww-accent bg-ww-accent-soft text-ww-fg"
-                      : "border-ww-hairline bg-ww-bg text-ww-fg-secondary"
-                  }`}
-                >
-                  Join Northgrid demo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOrgMode("create")}
-                  className={`h-9 rounded-[8px] border px-3 text-[13px] transition-colors ${
-                    orgMode === "create"
-                      ? "border-ww-accent bg-ww-accent-soft text-ww-fg"
-                      : "border-ww-hairline bg-ww-bg text-ww-fg-secondary"
-                  }`}
-                >
-                  New organization
-                </button>
+          <Suspense
+            fallback={
+              <div className="ww-panel flex min-h-[460px] items-center justify-center p-8 lg:col-span-5">
+                <span className="text-[13px] text-ww-fg-muted">
+                  Loading registration form…
+                </span>
               </div>
-              {orgMode === "create" && (
-                <input
-                  type="text"
-                  required
-                  value={organizationName}
-                  onChange={(e) => setOrganizationName(e.target.value)}
-                  placeholder="Acme Industrial Campus"
-                  className="mt-2.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
-                />
-              )}
-            </div>
+            }
+          >
+            <RegisterFormPanel />
+          </Suspense>
 
-            <Button
-              type="submit"
-              fullWidth
-              isDisabled={loading}
-              className="mt-2 h-10 rounded-[8px] bg-ww-fg text-[14px] font-medium text-ww-bg"
-            >
-              {loading ? "Creating account…" : "Create account"}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-[13px] text-ww-fg-secondary">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-ww-fg underline underline-offset-4"
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
-
-        {/* Right: Interactive Energy Telemetry Motion Showcase */}
-        <AuthVisualShowcase className="lg:col-span-7" />
-      </PageEntrance>
+          <AuthVisualShowcase className="lg:col-span-7" />
+        </PageEntrance>
       </main>
     </div>
   );

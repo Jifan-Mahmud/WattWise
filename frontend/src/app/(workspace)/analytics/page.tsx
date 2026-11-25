@@ -17,6 +17,8 @@ import {
 import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
 import { LoadingPanel, ErrorPanel } from "@/components/ui/DataState";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { buildApiUrl } from "@/lib/url-params";
 
 interface AnalyticsPayload {
   hourlyUsage: Array<{ hour: string; avgKwh: number; peakKwh: number }>;
@@ -82,10 +84,15 @@ function SimpleTooltip({
   );
 }
 
+const DEFAULT_ANALYTICS_FILTERS = {
+  preset: "30d",
+  buildingId: "all",
+};
+
 export default function AnalyticsPage() {
   const { apiFetch } = useWattWise();
-  const [preset, setPreset] = useState("30d");
-  const [buildingId, setBuildingId] = useState("all");
+  const { filters, setFilter } = useUrlFilters(DEFAULT_ANALYTICS_FILTERS);
+  const { preset, buildingId } = filters;
   const [buildings, setBuildings] = useState<BuildingRef[]>([]);
   const [data, setData] = useState<AnalyticsPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,10 +113,9 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams({ preset });
-    if (buildingId !== "all") params.set("buildingId", buildingId);
+    const url = buildApiUrl("/api/analytics", { preset, buildingId });
 
-    apiFetch<AnalyticsPayload>(`/api/analytics?${params.toString()}`)
+    apiFetch<AnalyticsPayload>(url)
       .then((res) => {
         if (!active) return;
         setError(null);
@@ -145,7 +151,7 @@ export default function AnalyticsPage() {
           <select
             aria-label="Date range"
             value={preset}
-            onChange={(e) => setPreset(e.target.value)}
+            onChange={(e) => setFilter("preset", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="7d">Last 7 days</option>
@@ -156,7 +162,7 @@ export default function AnalyticsPage() {
           <select
             aria-label="Filter building"
             value={buildingId}
-            onChange={(e) => setBuildingId(e.target.value)}
+            onChange={(e) => setFilter("buildingId", e.target.value)}
             className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
           >
             <option value="all">All buildings</option>

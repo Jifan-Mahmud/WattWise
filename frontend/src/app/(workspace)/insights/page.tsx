@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Check, Xmark } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import {
   PageEntrance,
   StaggerGroup,
@@ -56,9 +57,13 @@ interface InsightsPayload {
   }>;
 }
 
+const DEFAULT_INSIGHT_FILTERS = { status: "all" };
+
 export default function InsightsPage() {
   const { user, apiFetch, notify } = useWattWise();
   const canAct = user?.role !== "Viewer";
+  const { filters, setFilter } = useUrlFilters(DEFAULT_INSIGHT_FILTERS);
+  const recStatusFilter = filters.status;
 
   const [data, setData] = useState<InsightsPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,15 +175,36 @@ export default function InsightsPage() {
 
             {/* Recommendations */}
             <div className="ww-card p-6">
-              <h2 className="text-[16px] font-medium text-ww-fg">
-                Automated energy-saving recommendations
-              </h2>
-              <p className="text-[13px] text-ww-fg-secondary">
-                Derived from off-hours HVAC baseload, tariff peaks, and meter profiles
-              </p>
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <div>
+                  <h2 className="text-[16px] font-medium text-ww-fg">
+                    Automated energy-saving recommendations
+                  </h2>
+                  <p className="text-[13px] text-ww-fg-secondary">
+                    Derived from off-hours HVAC baseload, tariff peaks, and meter profiles
+                  </p>
+                </div>
+
+                <select
+                  aria-label="Filter recommendation status"
+                  value={recStatusFilter}
+                  onChange={(e) => setFilter("status", e.target.value)}
+                  className="h-9 rounded-[8px] border border-ww-hairline bg-ww-bg px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
+                >
+                  <option value="all">All recommendations</option>
+                  <option value="Open">Open</option>
+                  <option value="Accepted">Accepted</option>
+                  <option value="Dismissed">Dismissed</option>
+                </select>
+              </div>
 
               <StaggerGroup className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                {data.recommendations.map((rec) => (
+                {data.recommendations
+                  .filter(
+                    (rec) =>
+                      recStatusFilter === "all" || rec.status === recStatusFilter
+                  )
+                  .map((rec) => (
                   <StaggerItem
                     key={rec._id}
                     className="flex flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-5 transition-colors hover:border-ww-hairline-strong"

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import {
   LayoutCellsLarge,
@@ -28,6 +28,8 @@ import {
 import { useWattWise, type UserRole } from "@/components/providers/AppProviders";
 import { WattWiseMark, UNSLOP_EASE } from "@/components/ui/MotionPrimitives";
 import { StatusBadge } from "@/components/ui/DataState";
+import { ShareLinkButton } from "@/components/ui/ShareLinkButton";
+import { buildHref } from "@/lib/url-params";
 
 interface NavItem {
   label: string;
@@ -78,6 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { user, organization, theme, toggleTheme, loadingAuth, signOutUser } =
     useWattWise();
@@ -88,9 +91,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loadingAuth && !user) {
-      router.replace("/login");
+      const qs = searchParams.toString();
+      const target = qs ? `${pathname}?${qs}` : pathname;
+      router.replace(buildHref("/login", { redirect: target }));
     }
-  }, [loadingAuth, user, router]);
+  }, [loadingAuth, user, pathname, searchParams, router]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -310,6 +315,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             {user.role === "Viewer" && (
               <StatusBadge label="Read-only" tone="neutral" />
             )}
+            <ShareLinkButton />
             <motion.button
               type="button"
               whileTap={{ scale: 0.94 }}

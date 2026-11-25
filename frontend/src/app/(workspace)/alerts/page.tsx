@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance, UNSLOP_EASE } from "@/components/ui/MotionPrimitives";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { buildApiUrl } from "@/lib/url-params";
 import {
   StatusBadge,
   LoadingPanel,
@@ -50,15 +52,23 @@ interface RefOption {
   meterCode?: string;
 }
 
+const DEFAULT_ALERT_FILTERS = {
+  tab: "alerts",
+  status: "all",
+  severity: "all",
+};
+
 export default function AlertsPage() {
   const { user, apiFetch, notify } = useWattWise();
   const canManageRules =
     user?.role === "Organization Admin" || user?.role === "Facility Manager";
   const canTriage = user?.role !== "Viewer";
 
-  const [tab, setTab] = useState<"alerts" | "thresholds">("alerts");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [severityFilter, setSeverityFilter] = useState("all");
+  const { filters, setFilter } = useUrlFilters(DEFAULT_ALERT_FILTERS);
+  const tab: "alerts" | "thresholds" =
+    filters.tab === "thresholds" ? "thresholds" : "alerts";
+  const statusFilter = filters.status;
+  const severityFilter = filters.severity;
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [summary, setSummary] = useState({ New: 0, Acknowledged: 0, Resolved: 0 });
   const [thresholds, setThresholds] = useState<ThresholdItem[]>([]);
@@ -82,13 +92,14 @@ export default function AlertsPage() {
 
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams();
-    if (statusFilter !== "all") params.set("status", statusFilter);
-    if (severityFilter !== "all") params.set("severity", severityFilter);
+    const alertsUrl = buildApiUrl("/api/alerts", {
+      status: statusFilter,
+      severity: severityFilter,
+    });
 
     Promise.all([
       apiFetch<{ alerts: AlertItem[]; summary: { New: number; Acknowledged: number; Resolved: number } }>(
-        `/api/alerts?${params.toString()}`
+        alertsUrl
       ),
       apiFetch<{ thresholds: ThresholdItem[] }>("/api/thresholds"),
       apiFetch<{ buildings: RefOption[] }>("/api/buildings"),
@@ -197,7 +208,7 @@ export default function AlertsPage() {
           <div className="flex rounded-[8px] border border-ww-hairline bg-ww-card p-1">
             <button
               type="button"
-              onClick={() => setTab("alerts")}
+              onClick={() => setFilter("tab", "alerts")}
               className={`relative h-7 rounded-[6px] px-3 text-[13px] transition-colors ${
                 tab === "alerts"
                   ? "font-medium text-ww-fg"
@@ -217,7 +228,7 @@ export default function AlertsPage() {
             </button>
             <button
               type="button"
-              onClick={() => setTab("thresholds")}
+              onClick={() => setFilter("tab", "thresholds")}
               className={`relative h-7 rounded-[6px] px-3 text-[13px] transition-colors ${
                 tab === "thresholds"
                   ? "font-medium text-ww-fg"
@@ -272,7 +283,7 @@ export default function AlertsPage() {
               <select
                 aria-label="Filter alert status"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => setFilter("status", e.target.value)}
                 className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
               >
                 <option value="all">All statuses</option>
@@ -284,7 +295,7 @@ export default function AlertsPage() {
               <select
                 aria-label="Filter alert severity"
                 value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value)}
+                onChange={(e) => setFilter("severity", e.target.value)}
                 className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
               >
                 <option value="all">All severities</option>
