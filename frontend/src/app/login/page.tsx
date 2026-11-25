@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, TriangleExclamation } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { signIn } from "@/lib/auth-client";
-import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
@@ -18,7 +17,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeDemo, setActiveDemo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleCredentialLogin(e: React.FormEvent) {
@@ -38,31 +36,6 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : "Sign in failed.");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDemoLogin(demoEmail: string, roleLabel: string) {
-    setError(null);
-    setActiveDemo(demoEmail);
-    try {
-      const boot = await fetch("/api/auth/demo-bootstrap", { method: "POST" });
-      if (!boot.ok) {
-        throw new Error("Unable to initialize demo account.");
-      }
-      const res = await signIn.email({
-        email: demoEmail,
-        password: DEMO_PASSWORD,
-      });
-      if (res.error) {
-        throw new Error(res.error.message || "Demo sign in failed.");
-      }
-      await refreshToken();
-      notify(`Signed in as ${roleLabel}`, "positive");
-      router.push("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Demo login failed.");
-    } finally {
-      setActiveDemo(null);
     }
   }
 
@@ -87,7 +60,7 @@ export default function LoginPage() {
       <main className="mx-auto flex w-full max-w-[1120px] flex-1 items-center px-4 py-12 sm:px-6">
         <PageEntrance className="grid w-full grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Left: Standard Sign-In Form */}
-          <div className="ww-panel p-6 sm:p-8 lg:col-span-5">
+          <div className="ww-panel flex flex-col justify-center p-6 sm:p-8 lg:col-span-5">
             <h1 className="text-[26px] font-medium tracking-[-0.02em] text-ww-fg">
               Sign in to WattWise
             </h1>
@@ -143,40 +116,14 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 fullWidth
-                isDisabled={loading || Boolean(activeDemo)}
+                isDisabled={loading}
                 className="mt-2 h-10 rounded-[8px] bg-ww-fg text-[14px] font-medium text-ww-bg"
               >
                 {loading ? "Signing in…" : "Sign in"}
               </Button>
             </form>
 
-            {/* Quick Demo Credentials Autofill */}
-            <div className="mt-6 border-t border-ww-hairline pt-4">
-              <p className="text-[12px] font-medium text-ww-fg-secondary">
-                Quick evaluation accounts:
-              </p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {DEMO_ACCOUNTS.map((acct) => {
-                  const busy = activeDemo === acct.email;
-                  return (
-                    <button
-                      key={acct.email}
-                      type="button"
-                      disabled={Boolean(activeDemo) || loading}
-                      onClick={() => handleDemoLogin(acct.email, acct.role)}
-                      className="flex items-center justify-between rounded-[8px] border border-ww-hairline bg-ww-bg px-2.5 py-1.5 text-left text-[12px] text-ww-fg transition-colors hover:border-ww-hairline-strong hover:bg-ww-raised disabled:opacity-60"
-                    >
-                      <span className="truncate font-medium">{acct.role}</span>
-                      <span className="ml-1 font-mono text-[11px] text-ww-accent">
-                        {busy ? "…" : "Sign in"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <p className="mt-5 text-center text-[13px] text-ww-fg-secondary">
+            <p className="mt-6 text-center text-[13px] text-ww-fg-secondary">
               Need a new organization or operator account?{" "}
               <Link
                 href="/register"
