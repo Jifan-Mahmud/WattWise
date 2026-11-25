@@ -75,7 +75,7 @@ export default function LandingPage() {
             width={1600}
             height={900}
             priority
-            className="h-full w-full object-cover object-right opacity-35 mix-blend-multiply dark:opacity-85 dark:mix-blend-normal"
+            className="h-full w-full object-cover object-right opacity-85 mix-blend-multiply contrast-[1.08] dark:opacity-85 dark:mix-blend-normal dark:contrast-100"
           />
           <div
             className="absolute inset-0"
