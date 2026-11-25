@@ -3,20 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, TriangleExclamation } from "@gravity-ui/icons";
-import { motion } from "motion/react";
+import { ArrowLeft, TriangleExclamation } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { signIn } from "@/lib/auth-client";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
 import { useWattWise } from "@/components/providers/AppProviders";
-import {
-  PageEntrance,
-  StaggerGroup,
-  StaggerItem,
-  UNSLOP_EASE,
-  WattWiseMark,
-} from "@/components/ui/MotionPrimitives";
-import { StatusBadge } from "@/components/ui/DataState";
+import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
+import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -157,7 +150,33 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-[13px] text-ww-fg-secondary">
+            {/* Quick Demo Credentials Autofill */}
+            <div className="mt-6 border-t border-ww-hairline pt-4">
+              <p className="text-[12px] font-medium text-ww-fg-secondary">
+                Quick evaluation accounts:
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {DEMO_ACCOUNTS.map((acct) => {
+                  const busy = activeDemo === acct.email;
+                  return (
+                    <button
+                      key={acct.email}
+                      type="button"
+                      disabled={Boolean(activeDemo) || loading}
+                      onClick={() => handleDemoLogin(acct.email, acct.role)}
+                      className="flex items-center justify-between rounded-[8px] border border-ww-hairline bg-ww-bg px-2.5 py-1.5 text-left text-[12px] text-ww-fg transition-colors hover:border-ww-hairline-strong hover:bg-ww-raised disabled:opacity-60"
+                    >
+                      <span className="truncate font-medium">{acct.role}</span>
+                      <span className="ml-1 font-mono text-[11px] text-ww-accent">
+                        {busy ? "…" : "Sign in"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <p className="mt-5 text-center text-[13px] text-ww-fg-secondary">
               Need a new organization or operator account?{" "}
               <Link
                 href="/register"
@@ -168,72 +187,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Right: 1-Click Role Evaluation Access */}
-          <div className="ww-panel flex flex-col justify-between p-6 sm:p-8 lg:col-span-7">
-            <div>
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-[18px] font-medium text-ww-fg">
-                  Demo role access
-                </h2>
-                <span className="font-mono text-[12px] text-ww-fg-muted">
-                  Northgrid Commercial Holdings
-                </span>
-              </div>
-              <p className="mt-1 text-[13px] text-ww-fg-secondary">
-                Select any role below to sign in with an authentic Better Auth
-                session and verify role-based permissions.
-              </p>
-
-              <StaggerGroup className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {DEMO_ACCOUNTS.map((acct) => {
-                  const busy = activeDemo === acct.email;
-                  return (
-                    <StaggerItem key={acct.email}>
-                      <motion.button
-                        type="button"
-                        disabled={Boolean(activeDemo) || loading}
-                        whileTap={{ scale: 0.985 }}
-                        transition={{ duration: 0.14, ease: UNSLOP_EASE }}
-                        onClick={() => handleDemoLogin(acct.email, acct.role)}
-                        className="flex h-full w-full flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-4 text-left transition-colors hover:border-ww-hairline-strong hover:bg-ww-raised/50 disabled:opacity-60"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-2">
-                            <StatusBadge
-                              label={acct.role}
-                              tone={
-                                acct.role === "Organization Admin"
-                                  ? "accent"
-                                  : "neutral"
-                              }
-                            />
-                            <ArrowRight className="h-3.5 w-3.5 text-ww-fg-muted" />
-                          </div>
-                          <p className="mt-3 text-[14px] font-medium text-ww-fg">
-                            {acct.name}
-                          </p>
-                          <p className="font-mono text-[12px] text-ww-fg-muted">
-                            {acct.email}
-                          </p>
-                          <p className="mt-2 text-[12px] leading-relaxed text-ww-fg-secondary">
-                            {acct.description}
-                          </p>
-                        </div>
-                        <p className="mt-3 text-[12px] font-medium text-ww-accent">
-                          {busy ? "Authenticating…" : "Continue as role"}
-                        </p>
-                      </motion.button>
-                    </StaggerItem>
-                  );
-                })}
-              </StaggerGroup>
-            </div>
-
-            <div className="mt-6 rounded-[8px] border border-ww-hairline bg-ww-bg px-4 py-3 font-mono text-[12px] text-ww-fg-muted">
-              Dataset ready: 3 organizations · 12 buildings · 36 floors · 60
-              departments · 84 meters · 60,480 records
-            </div>
-          </div>
+          {/* Right: Interactive Energy Telemetry Motion Showcase */}
+          <AuthVisualShowcase className="lg:col-span-7" />
         </PageEntrance>
       </main>
     </div>

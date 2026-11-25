@@ -8,6 +8,7 @@ import { Button } from "@heroui/react";
 import { signUp } from "@/lib/auth-client";
 import { useWattWise, type UserRole } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
+import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
 
 const ROLES: UserRole[] = [
   "Organization Admin",
@@ -80,7 +81,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col bg-ww-bg text-ww-fg">
       <header className="border-b border-ww-hairline">
-        <div className="mx-auto flex h-16 max-w-[960px] items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5 text-ww-fg">
             <WattWiseMark size={20} />
             <span className="text-[16px] font-semibold">WattWise</span>
@@ -95,9 +96,11 @@ export default function RegisterPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[520px] flex-1 items-center px-4 py-12 sm:px-6">
-        <PageEntrance className="ww-panel w-full p-6 sm:p-8">
-          <h1 className="text-[26px] font-medium tracking-[-0.02em] text-ww-fg">
+      <main className="mx-auto flex w-full max-w-[1120px] flex-1 items-center px-4 py-12 sm:px-6">
+        <PageEntrance className="grid w-full grid-cols-1 gap-8 lg:grid-cols-12">
+          {/* Left: Registration Form */}
+          <div className="ww-panel p-6 sm:p-8 lg:col-span-5">
+            <h1 className="text-[26px] font-medium tracking-[-0.02em] text-ww-fg">
             Create WattWise account
           </h1>
           <p className="mt-1.5 text-[14px] text-ww-fg-secondary">
@@ -248,7 +251,11 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </p>
-        </PageEntrance>
+        </div>
+
+        {/* Right: Interactive Energy Telemetry Motion Showcase */}
+        <AuthVisualShowcase className="lg:col-span-7" />
+      </PageEntrance>
       </main>
     </div>
   );
