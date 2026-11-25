@@ -1,239 +1,186 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { PlugConnection, ShieldCheck } from "@gravity-ui/icons";
+import React from "react";
+import { motion } from "motion/react";
+import { Bell, ChartLine, ShieldCheck } from "@gravity-ui/icons";
 import {
-  AnimatedNumber,
   StaggerGroup,
   StaggerItem,
   UNSLOP_EASE,
 } from "@/components/ui/MotionPrimitives";
 
-interface TelemetrySample {
-  code: string;
-  building: string;
-  kwh: number;
-  kw: number;
-  voltage: number;
-  pf: number;
-  status: "Normal" | "Peak" | "Optimal";
-}
-
-const LIVE_SAMPLES: TelemetrySample[] = [
-  { code: "MTR-NG-01", building: "Northgrid Tower A", kwh: 48.6, kw: 52.1, voltage: 480, pf: 0.98, status: "Normal" },
-  { code: "MTR-MRD-04", building: "Meridian Plaza", kwh: 64.2, kw: 68.9, voltage: 479, pf: 0.96, status: "Peak" },
-  { code: "MTR-HRB-02", building: "Harbor Exchange", kwh: 36.4, kw: 38.0, voltage: 481, pf: 0.99, status: "Optimal" },
-  { code: "MTR-CDA-06", building: "Central Data Annex", kwh: 82.5, kw: 86.4, voltage: 480, pf: 0.97, status: "Normal" },
-  { code: "MTR-VNG-03", building: "Vanguard Logistics", kwh: 29.8, kw: 31.2, voltage: 482, pf: 0.98, status: "Optimal" },
+const HIGHLIGHTS = [
+  {
+    icon: ChartLine,
+    title: "Live visibility",
+    detail: "Building & meter trends",
+  },
+  {
+    icon: Bell,
+    title: "Threshold alerts",
+    detail: "Catch spikes early",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Scoped access",
+    detail: "Role-based isolation",
+  },
 ];
 
 export function AuthVisualShowcase({ className }: { className?: string }) {
-  const [sampleIdx, setSampleIdx] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSampleIdx((prev) => (prev + 1) % LIVE_SAMPLES.length);
-    }, 3800);
-    return () => clearInterval(timer);
-  }, []);
-
-  const sample = LIVE_SAMPLES[sampleIdx];
-
   return (
     <div
       className={`ww-panel relative flex flex-col justify-between overflow-hidden p-6 sm:p-8 ${
         className || ""
       }`}
     >
-      {/* Subtle ambient background glow */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-ww-accent/5 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-ww-positive/5 blur-3xl" />
-
       <div className="relative z-10 space-y-6">
-        {/* Header strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-ww-hairline bg-ww-bg px-3 py-1 font-mono text-[12px] text-ww-fg">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ww-positive opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-ww-positive" />
-            </span>
-            <span>Live telemetry stream</span>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-[11px] text-ww-fg-muted">
-            <PlugConnection className="h-3.5 w-3.5 text-ww-accent" />
-            <span>84 active smart meters</span>
-          </div>
+        {/* Minimal status label */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-ww-hairline bg-ww-bg px-3 py-1 text-[12px] text-ww-fg-secondary">
+          <motion.span
+            className="h-2 w-2 rounded-full bg-ww-positive"
+            animate={{ opacity: [1, 0.4, 1] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <span>WattWise Telemetry</span>
         </div>
 
+        {/* Clean heading */}
         <div>
-          <h2 className="text-[20px] font-medium tracking-[-0.015em] text-ww-fg sm:text-[22px]">
-            Energy intelligence & load optimization
+          <h2 className="text-[22px] font-medium tracking-[-0.02em] text-ww-fg sm:text-[24px]">
+            Energy visibility, simplified
           </h2>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-ww-fg-secondary">
-            Continuous sub-meter monitoring, automated baseline anomaly flagging,
-            and Scope 2 carbon accounting across enterprise commercial portfolios.
+          <p className="mt-2 max-w-[460px] text-[14px] leading-relaxed text-ww-fg-secondary">
+            Monitor sub-meter consumption, catch off-hours load anomalies, and
+            manage building efficiency from a single workspace.
           </p>
         </div>
 
-        {/* Animated Telemetry Waveform */}
-        <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-4">
+        {/* Calm Animated Waveform Card */}
+        <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-5">
           <div className="flex items-center justify-between text-[12px]">
-            <span className="font-medium text-ww-fg">Diurnal load trace (kWh)</span>
-            <span className="font-mono text-ww-accent font-medium">Nov 2026 baseline</span>
+            <span className="font-medium text-ww-fg">Grid load curve</span>
+            <span className="font-mono text-[11px] text-ww-accent">Active</span>
           </div>
 
-          <div className="relative mt-2 h-28 w-full overflow-hidden">
+          <div className="relative mt-3 h-36 w-full overflow-hidden">
             <svg
               className="h-full w-full"
-              viewBox="0 0 520 110"
+              viewBox="0 0 520 130"
               fill="none"
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="authTelemetryGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--ww-accent)" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="var(--ww-accent)" stopOpacity={0.0} />
+                <linearGradient id="authSimpleGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="var(--ww-accent)"
+                    stopOpacity={0.22}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--ww-accent)"
+                    stopOpacity={0.0}
+                  />
                 </linearGradient>
               </defs>
 
-              {/* Shaded Area Under Wave */}
-              <motion.path
-                d="M0,75 Q40,30 80,60 T160,40 T240,65 T320,35 T400,50 T480,25 T520,40 L520,110 L0,110 Z"
-                fill="url(#authTelemetryGrad)"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, ease: UNSLOP_EASE }}
+              {/* Subtle horizontal reference guides */}
+              <line
+                x1="0"
+                y1="38"
+                x2="520"
+                y2="38"
+                stroke="var(--ww-hairline)"
+                strokeWidth="1"
+              />
+              <line
+                x1="0"
+                y1="72"
+                x2="520"
+                y2="72"
+                stroke="var(--ww-hairline)"
+                strokeDasharray="4 4"
+                strokeWidth="1"
+              />
+              <line
+                x1="0"
+                y1="106"
+                x2="520"
+                y2="106"
+                stroke="var(--ww-hairline)"
+                strokeWidth="1"
               />
 
-              {/* Crisp Animated Wave Stroke */}
+              {/* Soft secondary baseline wave */}
               <motion.path
-                d="M0,75 Q40,30 80,60 T160,40 T240,65 T320,35 T400,50 T480,25 T520,40"
+                d="M0,92 Q65,68 130,84 T260,72 T390,82 T520,66"
+                stroke="var(--ww-positive)"
+                strokeWidth="1.5"
+                strokeOpacity={0.35}
+                fill="none"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1.2, ease: UNSLOP_EASE, delay: 0.1 }}
+              />
+
+              {/* Area fill under primary wave */}
+              <motion.path
+                d="M0,88 Q50,36 100,68 T200,46 T300,76 T400,42 T520,52 L520,130 L0,130 Z"
+                fill="url(#authSimpleGrad)"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.9, ease: UNSLOP_EASE }}
+              />
+
+              {/* Primary load trace */}
+              <motion.path
+                d="M0,88 Q50,36 100,68 T200,46 T300,76 T400,42 T520,52"
                 stroke="var(--ww-accent)"
                 strokeWidth="2.2"
                 fill="none"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 1.4, ease: UNSLOP_EASE }}
+                transition={{ duration: 1.3, ease: UNSLOP_EASE }}
               />
 
-              {/* Reference Baseline Line */}
-              <line
-                x1="0"
-                y1="55"
-                x2="520"
-                y2="55"
-                stroke="var(--ww-fg-muted)"
-                strokeDasharray="4 4"
-                strokeWidth="1"
-                opacity="0.4"
-              />
-
-              {/* Pulsing telemetry marker at peak load */}
-              <circle cx="480" cy="25" r="4.5" fill="var(--ww-accent)" />
-              <circle
-                cx="480"
-                cy="25"
-                r="9"
-                fill="var(--ww-accent)"
-                opacity="0.35"
-                className="animate-ping"
+              {/* Continuous subtle pulse traveling along curve */}
+              <motion.path
+                d="M0,88 Q50,36 100,68 T200,46 T300,76 T400,42 T520,52"
+                stroke="var(--ww-fg)"
+                strokeWidth="2.2"
+                strokeOpacity={0.55}
+                strokeDasharray="10 90"
+                fill="none"
+                animate={{ strokeDashoffset: [0, -200] }}
+                transition={{ duration: 3.6, repeat: Infinity, ease: "linear" }}
               />
             </svg>
           </div>
         </div>
-
-        {/* 4 Staggered Live Metric Counters */}
-        <StaggerGroup className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StaggerItem className="rounded-[10px] border border-ww-hairline bg-ww-bg p-3">
-            <p className="text-[11px] text-ww-fg-muted">Consumption</p>
-            <p className="mt-1 tabular-nums text-[18px] font-medium leading-none text-ww-fg">
-              <AnimatedNumber value={621306} />
-            </p>
-            <p className="mt-1 text-[11px] text-ww-positive">30d verified</p>
-          </StaggerItem>
-
-          <StaggerItem className="rounded-[10px] border border-ww-hairline bg-ww-bg p-3">
-            <p className="text-[11px] text-ww-fg-muted">Peak load</p>
-            <p className="mt-1 tabular-nums text-[18px] font-medium leading-none text-ww-fg">
-              <AnimatedNumber value={279.7} decimals={1} />
-            </p>
-            <p className="mt-1 text-[11px] text-ww-accent">kW demand</p>
-          </StaggerItem>
-
-          <StaggerItem className="rounded-[10px] border border-ww-hairline bg-ww-bg p-3">
-            <p className="text-[11px] text-ww-fg-muted">Efficiency</p>
-            <p className="mt-1 tabular-nums text-[18px] font-medium leading-none text-ww-fg">
-              <AnimatedNumber value={94.4} decimals={1} suffix="%" />
-            </p>
-            <p className="mt-1 text-[11px] text-ww-positive">High rating</p>
-          </StaggerItem>
-
-          <StaggerItem className="rounded-[10px] border border-ww-hairline bg-ww-bg p-3">
-            <p className="text-[11px] text-ww-fg-muted">Carbon offset</p>
-            <p className="mt-1 tabular-nums text-[18px] font-medium leading-none text-ww-fg">
-              <AnimatedNumber value={256.0} decimals={1} />
-            </p>
-            <p className="mt-1 text-[11px] text-ww-fg-muted">t CO₂e</p>
-          </StaggerItem>
-        </StaggerGroup>
-
-        {/* Dynamic Telemetry Packet Feed Ticker */}
-        <div className="rounded-[10px] border border-ww-hairline bg-ww-bg p-3">
-          <div className="flex items-center justify-between text-[12px]">
-            <span className="text-ww-fg-secondary">Current meter packet:</span>
-            <span className="font-mono text-[11px] text-ww-fg-muted">
-              Auto-sampling every 4s
-            </span>
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={sample.code}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.22, ease: UNSLOP_EASE }}
-              className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-ww-hairline pt-2 font-mono text-[12px]"
-            >
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-ww-fg">{sample.code}</span>
-                <span className="text-ww-fg-muted">·</span>
-                <span className="text-ww-fg-secondary truncate max-w-[140px] sm:max-w-none">
-                  {sample.building}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-ww-fg-secondary">{sample.voltage}V</span>
-                <span className="text-ww-fg-secondary">PF {sample.pf}</span>
-                <span className="font-medium text-ww-accent">{sample.kwh} kWh</span>
-                <span
-                  className={`rounded-[4px] px-1.5 py-0.5 text-[10px] font-medium ${
-                    sample.status === "Peak"
-                      ? "bg-ww-negative-soft text-ww-negative"
-                      : sample.status === "Optimal"
-                      ? "bg-ww-positive-soft text-ww-positive"
-                      : "bg-ww-raised text-ww-fg"
-                  }`}
-                >
-                  {sample.status}
-                </span>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
       </div>
 
-      {/* Verified Dataset Scale Footer */}
-      <div className="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-ww-hairline pt-4 font-mono text-[11px] text-ww-fg-muted">
-        <span className="inline-flex items-center gap-1.5">
-          <ShieldCheck className="h-3.5 w-3.5 text-ww-positive" />
-          Enterprise multi-tenant isolation
-        </span>
-        <span>3 orgs · 12 bldgs · 84 meters · 60,480 readings</span>
-      </div>
+      {/* Minimal 3-item footer */}
+      <StaggerGroup className="relative z-10 mt-6 grid grid-cols-1 gap-4 border-t border-ww-hairline pt-5 sm:grid-cols-3">
+        {HIGHLIGHTS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <StaggerItem key={item.title} className="flex items-start gap-2.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] border border-ww-hairline bg-ww-bg text-ww-accent">
+                <Icon className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium leading-tight text-ww-fg">
+                  {item.title}
+                </p>
+                <p className="mt-0.5 text-[12px] text-ww-fg-muted">
+                  {item.detail}
+                </p>
+              </div>
+            </StaggerItem>
+          );
+        })}
+      </StaggerGroup>
     </div>
   );
 }
