@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { Check, CircleCheck, Plus, TrashBin } from "@gravity-ui/icons";
+import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import { PageEntrance, UNSLOP_EASE } from "@/components/ui/MotionPrimitives";
 import {
   StatusBadge,
   LoadingPanel,
@@ -197,24 +198,42 @@ export default function AlertsPage() {
             <button
               type="button"
               onClick={() => setTab("alerts")}
-              className={`h-7 rounded-[6px] px-3 text-[13px] transition-colors ${
+              className={`relative h-7 rounded-[6px] px-3 text-[13px] transition-colors ${
                 tab === "alerts"
-                  ? "bg-ww-raised font-medium text-ww-fg"
-                  : "text-ww-fg-secondary"
+                  ? "font-medium text-ww-fg"
+                  : "text-ww-fg-secondary hover:text-ww-fg"
               }`}
             >
-              Alerts ({summary.New + summary.Acknowledged + summary.Resolved})
+              {tab === "alerts" && (
+                <motion.span
+                  layoutId="alerts-tab-pill"
+                  transition={{ duration: 0.2, ease: UNSLOP_EASE }}
+                  className="absolute inset-0 rounded-[6px] bg-ww-raised"
+                />
+              )}
+              <span className="relative z-10">
+                Alerts ({summary.New + summary.Acknowledged + summary.Resolved})
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setTab("thresholds")}
-              className={`h-7 rounded-[6px] px-3 text-[13px] transition-colors ${
+              className={`relative h-7 rounded-[6px] px-3 text-[13px] transition-colors ${
                 tab === "thresholds"
-                  ? "bg-ww-raised font-medium text-ww-fg"
-                  : "text-ww-fg-secondary"
+                  ? "font-medium text-ww-fg"
+                  : "text-ww-fg-secondary hover:text-ww-fg"
               }`}
             >
-              Threshold rules ({thresholds.length})
+              {tab === "thresholds" && (
+                <motion.span
+                  layoutId="alerts-tab-pill"
+                  transition={{ duration: 0.2, ease: UNSLOP_EASE }}
+                  className="absolute inset-0 rounded-[6px] bg-ww-raised"
+                />
+              )}
+              <span className="relative z-10">
+                Threshold rules ({thresholds.length})
+              </span>
             </button>
           </div>
 
@@ -283,81 +302,88 @@ export default function AlertsPage() {
             />
           ) : (
             <div className="ww-card divide-y divide-ww-hairline">
-              {alerts.map((a) => (
-                <div
-                  key={a._id}
-                  className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge
-                        label={a.severity}
-                        tone={
-                          a.severity === "High"
-                            ? "negative"
-                            : a.severity === "Medium"
-                            ? "warning"
-                            : "neutral"
-                        }
-                      />
-                      <StatusBadge
-                        label={a.status}
-                        tone={
-                          a.status === "New"
-                            ? "accent"
-                            : a.status === "Resolved"
-                            ? "positive"
-                            : "warning"
-                        }
-                      />
-                      <span className="font-mono text-[11px] text-ww-fg-muted">
-                        {a.meterCode}
-                      </span>
-                      <span className="text-[12px] text-ww-fg-muted">
-                        {new Date(a.triggeredAt).toISOString().slice(0, 16).replace("T", " ")} UTC
-                      </span>
-                    </div>
-                    <p className="mt-2 text-[14px] font-medium text-ww-fg">
-                      {a.title}
-                    </p>
-                    <p className="mt-0.5 text-[13px] text-ww-fg-secondary">
-                      {a.buildingName} · {a.departmentName} — {a.description}
-                    </p>
-                    {(a.acknowledgedBy || a.resolvedBy) && (
-                      <p className="mt-1 font-mono text-[11px] text-ww-fg-muted">
-                        {a.resolvedBy
-                          ? `Resolved by ${a.resolvedBy}`
-                          : `Acknowledged by ${a.acknowledgedBy}`}
+              <AnimatePresence initial={false}>
+                {alerts.map((a) => (
+                  <motion.div
+                    key={a._id}
+                    layout
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, overflow: "hidden" }}
+                    transition={{ duration: 0.22, ease: UNSLOP_EASE }}
+                    className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge
+                          label={a.severity}
+                          tone={
+                            a.severity === "High"
+                              ? "negative"
+                              : a.severity === "Medium"
+                              ? "warning"
+                              : "neutral"
+                          }
+                        />
+                        <StatusBadge
+                          label={a.status}
+                          tone={
+                            a.status === "New"
+                              ? "accent"
+                              : a.status === "Resolved"
+                              ? "positive"
+                              : "warning"
+                          }
+                        />
+                        <span className="font-mono text-[11px] text-ww-fg-muted">
+                          {a.meterCode}
+                        </span>
+                        <span className="text-[12px] text-ww-fg-muted">
+                          {new Date(a.triggeredAt).toISOString().slice(0, 16).replace("T", " ")} UTC
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[14px] font-medium text-ww-fg">
+                        {a.title}
                       </p>
-                    )}
-                  </div>
+                      <p className="mt-0.5 text-[13px] text-ww-fg-secondary">
+                        {a.buildingName} · {a.departmentName} — {a.description}
+                      </p>
+                      {(a.acknowledgedBy || a.resolvedBy) && (
+                        <p className="mt-1 font-mono text-[11px] text-ww-fg-muted">
+                          {a.resolvedBy
+                            ? `Resolved by ${a.resolvedBy}`
+                            : `Acknowledged by ${a.acknowledgedBy}`}
+                        </p>
+                      )}
+                    </div>
 
-                  {canTriage && a.status !== "Resolved" && (
-                    <div className="flex shrink-0 items-center gap-2">
-                      {a.status === "New" && (
+                    {canTriage && a.status !== "Resolved" && (
+                      <div className="flex shrink-0 items-center gap-2">
+                        {a.status === "New" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onPress={() =>
+                              handleStatusChange(a._id, "Acknowledged")
+                            }
+                          >
+                            <Check className="mr-1.5 h-3.5 w-3.5" />
+                            Acknowledge
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
-                          onPress={() =>
-                            handleStatusChange(a._id, "Acknowledged")
-                          }
+                          onPress={() => handleStatusChange(a._id, "Resolved")}
                         >
-                          <Check className="mr-1.5 h-3.5 w-3.5" />
-                          Acknowledge
+                          <CircleCheck className="mr-1.5 h-3.5 w-3.5 text-ww-positive" />
+                          Resolve
                         </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => handleStatusChange(a._id, "Resolved")}
-                      >
-                        <CircleCheck className="mr-1.5 h-3.5 w-3.5 text-ww-positive" />
-                        Resolve
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>

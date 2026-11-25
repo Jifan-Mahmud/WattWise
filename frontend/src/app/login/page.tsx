@@ -4,11 +4,18 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, TriangleExclamation } from "@gravity-ui/icons";
+import { motion } from "motion/react";
 import { Button } from "@heroui/react";
 import { signIn } from "@/lib/auth-client";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
+import {
+  PageEntrance,
+  StaggerGroup,
+  StaggerItem,
+  UNSLOP_EASE,
+  WattWiseMark,
+} from "@/components/ui/MotionPrimitives";
 import { StatusBadge } from "@/components/ui/DataState";
 
 export default function LoginPage() {
@@ -177,46 +184,49 @@ export default function LoginPage() {
                 session and verify role-based permissions.
               </p>
 
-              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <StaggerGroup className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {DEMO_ACCOUNTS.map((acct) => {
                   const busy = activeDemo === acct.email;
                   return (
-                    <button
-                      key={acct.email}
-                      type="button"
-                      disabled={Boolean(activeDemo) || loading}
-                      onClick={() => handleDemoLogin(acct.email, acct.role)}
-                      className="flex flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-4 text-left transition-colors hover:border-ww-hairline-strong hover:bg-ww-raised/50 disabled:opacity-60"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <StatusBadge
-                            label={acct.role}
-                            tone={
-                              acct.role === "Organization Admin"
-                                ? "accent"
-                                : "neutral"
-                            }
-                          />
-                          <ArrowRight className="h-3.5 w-3.5 text-ww-fg-muted" />
+                    <StaggerItem key={acct.email}>
+                      <motion.button
+                        type="button"
+                        disabled={Boolean(activeDemo) || loading}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.14, ease: UNSLOP_EASE }}
+                        onClick={() => handleDemoLogin(acct.email, acct.role)}
+                        className="flex h-full w-full flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-4 text-left transition-colors hover:border-ww-hairline-strong hover:bg-ww-raised/50 disabled:opacity-60"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-2">
+                            <StatusBadge
+                              label={acct.role}
+                              tone={
+                                acct.role === "Organization Admin"
+                                  ? "accent"
+                                  : "neutral"
+                              }
+                            />
+                            <ArrowRight className="h-3.5 w-3.5 text-ww-fg-muted" />
+                          </div>
+                          <p className="mt-3 text-[14px] font-medium text-ww-fg">
+                            {acct.name}
+                          </p>
+                          <p className="font-mono text-[12px] text-ww-fg-muted">
+                            {acct.email}
+                          </p>
+                          <p className="mt-2 text-[12px] leading-relaxed text-ww-fg-secondary">
+                            {acct.description}
+                          </p>
                         </div>
-                        <p className="mt-3 text-[14px] font-medium text-ww-fg">
-                          {acct.name}
+                        <p className="mt-3 text-[12px] font-medium text-ww-accent">
+                          {busy ? "Authenticating…" : "Continue as role"}
                         </p>
-                        <p className="font-mono text-[12px] text-ww-fg-muted">
-                          {acct.email}
-                        </p>
-                        <p className="mt-2 text-[12px] leading-relaxed text-ww-fg-secondary">
-                          {acct.description}
-                        </p>
-                      </div>
-                      <p className="mt-3 text-[12px] font-medium text-ww-accent">
-                        {busy ? "Authenticating…" : "Continue as role"}
-                      </p>
-                    </button>
+                      </motion.button>
+                    </StaggerItem>
                   );
                 })}
-              </div>
+              </StaggerGroup>
             </div>
 
             <div className="mt-6 rounded-[8px] border border-ww-hairline bg-ww-bg px-4 py-3 font-mono text-[12px] text-ww-fg-muted">

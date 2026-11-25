@@ -9,6 +9,7 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { authClient, useSession } from "@/lib/auth-client";
 import { apiRequest, invalidateApiCache } from "@/lib/api";
 
@@ -272,33 +273,41 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AppContext.Provider value={value}>
-      {children}
-      <div
-        aria-live="polite"
-        className="pointer-events-none fixed bottom-5 right-5 z-[100001] flex flex-col gap-2"
-      >
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className="pointer-events-auto flex items-center gap-2.5 rounded-lg border border-ww-hairline-strong bg-ww-card px-3.5 py-2.5 text-[13px] text-ww-fg shadow-lg"
-          >
-            <span
-              className="h-2 w-2 shrink-0 rounded-full"
-              style={{
-                backgroundColor:
-                  t.tone === "positive"
-                    ? "var(--ww-positive)"
-                    : t.tone === "negative"
-                    ? "var(--ww-negative)"
-                    : "var(--ww-accent)",
-              }}
-            />
-            <span>{t.title}</span>
-          </div>
-        ))}
-      </div>
-    </AppContext.Provider>
+    <MotionConfig reducedMotion="user">
+      <AppContext.Provider value={value}>
+        {children}
+        <div
+          aria-live="polite"
+          className="pointer-events-none fixed bottom-5 right-5 z-[100001] flex flex-col gap-2"
+        >
+          <AnimatePresence>
+            {toasts.map((t) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="pointer-events-auto flex items-center gap-2.5 rounded-lg border border-ww-hairline-strong bg-ww-card px-3.5 py-2.5 text-[13px] text-ww-fg shadow-lg"
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor:
+                      t.tone === "positive"
+                        ? "var(--ww-positive)"
+                        : t.tone === "negative"
+                        ? "var(--ww-negative)"
+                        : "var(--ww-accent)",
+                  }}
+                />
+                <span>{t.title}</span>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </AppContext.Provider>
+    </MotionConfig>
   );
 }
 

@@ -4,7 +4,11 @@ import React, { useEffect, useState } from "react";
 import { Check, Xmark } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import {
+  PageEntrance,
+  StaggerGroup,
+  StaggerItem,
+} from "@/components/ui/MotionPrimitives";
 import {
   StatCard,
   StatusBadge,
@@ -125,12 +129,16 @@ export default function InsightsPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Potential monthly savings"
+                numericValue={Math.round(potentialMonthlySavings)}
+                prefix="$"
                 value={`$${potentialMonthlySavings.toLocaleString()}`}
                 delta="From active efficiency recommendations"
                 deltaTone="positive"
               />
               <StatCard
                 label="Scope 2 carbon footprint"
+                numericValue={data.carbonSummary.metricTonsCo2}
+                decimals={1}
                 value={data.carbonSummary.metricTonsCo2.toFixed(1)}
                 unit="t CO₂e"
                 delta={`~${data.carbonSummary.equivalentTreesYear.toLocaleString()} tree-years offset`}
@@ -146,6 +154,12 @@ export default function InsightsPage() {
               />
               <StatCard
                 label="Historical period delta"
+                numericValue={data.historicalComparison.changePct}
+                decimals={
+                  Number.isInteger(data.historicalComparison.changePct) ? 0 : 1
+                }
+                prefix={data.historicalComparison.changePct > 0 ? "+" : ""}
+                suffix="%"
                 value={`${data.historicalComparison.changePct > 0 ? "+" : ""}${data.historicalComparison.changePct}%`}
                 delta={`${data.historicalComparison.currentKwh.toLocaleString()} vs ${data.historicalComparison.prevKwh.toLocaleString()} kWh`}
                 deltaTone={
@@ -163,11 +177,11 @@ export default function InsightsPage() {
                 Derived from off-hours HVAC baseload, tariff peaks, and meter profiles
               </p>
 
-              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <StaggerGroup className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {data.recommendations.map((rec) => (
-                  <div
+                  <StaggerItem
                     key={rec._id}
-                    className="flex flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-5"
+                    className="flex flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-5 transition-colors hover:border-ww-hairline-strong"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2">
@@ -229,9 +243,9 @@ export default function InsightsPage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerGroup>
             </div>
 
             {/* Highest Usage + Peak Hours + Anomalies */}

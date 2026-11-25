@@ -3,16 +3,25 @@
 import React from "react";
 import { TriangleExclamation, ArrowRotateRight } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
+import { AnimatedNumber } from "@/components/ui/MotionPrimitives";
 
 export function StatCard({
   label,
   value,
+  numericValue,
+  decimals = 0,
+  prefix = "",
+  suffix = "",
   unit,
   delta,
   deltaTone = "neutral",
 }: {
   label: string;
-  value: string;
+  value?: string;
+  numericValue?: number;
+  decimals?: number;
+  prefix?: string;
+  suffix?: string;
   unit?: string;
   delta?: string;
   deltaTone?: "positive" | "negative" | "neutral";
@@ -25,11 +34,20 @@ export function StatCard({
       : "text-ww-fg-muted";
 
   return (
-    <div className="ww-card flex flex-col justify-between p-5">
+    <div className="ww-card flex flex-col justify-between p-5 transition-colors hover:border-ww-hairline-strong">
       <p className="text-[13px] font-normal text-ww-fg-secondary">{label}</p>
       <div className="mt-2.5 flex items-baseline gap-1.5">
         <span className="tabular-nums text-[28px] font-medium leading-none tracking-[-0.02em] text-ww-fg">
-          {value}
+          {typeof numericValue === "number" ? (
+            <AnimatedNumber
+              value={numericValue}
+              decimals={decimals}
+              prefix={prefix}
+              suffix={suffix}
+            />
+          ) : (
+            value
+          )}
         </span>
         {unit && (
           <span className="font-mono text-[12px] text-ww-fg-muted">{unit}</span>

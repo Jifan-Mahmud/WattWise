@@ -3,9 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import { ArrowRight, Sun, Moon } from "@gravity-ui/icons";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { WattWiseMark } from "@/components/ui/MotionPrimitives";
+import { WattWiseMark, UNSLOP_EASE } from "@/components/ui/MotionPrimitives";
 
 const PUBLIC_NAV = [
   { label: "Platform", href: "/platform" },
@@ -37,13 +38,20 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`rounded-[8px] px-3 py-1.5 transition-colors ${
+                    className={`relative rounded-[8px] px-3 py-1.5 transition-colors ${
                       active
-                        ? "bg-ww-raised font-medium text-ww-fg"
+                        ? "font-medium text-ww-fg"
                         : "text-ww-fg-secondary hover:text-ww-fg"
                     }`}
                   >
-                    {item.label}
+                    {active && (
+                      <motion.span
+                        layoutId="public-nav-pill"
+                        transition={{ duration: 0.24, ease: UNSLOP_EASE }}
+                        className="absolute inset-0 rounded-[8px] border border-ww-hairline bg-ww-raised"
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
                   </Link>
                 );
               })}
@@ -51,8 +59,9 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.94 }}
               onClick={toggleTheme}
               aria-label="Toggle theme"
               className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-ww-hairline-strong bg-ww-card text-ww-fg transition-colors hover:bg-ww-raised"
@@ -62,11 +71,11 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
               ) : (
                 <Moon className="h-4 w-4" />
               )}
-            </button>
+            </motion.button>
             {user ? (
               <Link
                 href="/dashboard"
-                className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-opacity hover:opacity-90"
+                className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-transform active:scale-[0.98]"
               >
                 Open dashboard
                 <ArrowRight className="h-4 w-4" />
@@ -81,7 +90,7 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-opacity hover:opacity-90"
+                  className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-transform active:scale-[0.98]"
                 >
                   Get started
                 </Link>
@@ -89,6 +98,7 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </div>
+
         <nav className="flex items-center gap-1 overflow-x-auto border-t border-ww-hairline px-4 py-1.5 text-[13px] md:hidden">
           {PUBLIC_NAV.map((item) => {
             const active = pathname === item.href;

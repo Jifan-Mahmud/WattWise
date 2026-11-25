@@ -4,7 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Xmark } from "@gravity-ui/icons";
 import { PublicSiteShell } from "@/components/layout/PublicSiteShell";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import {
+  PageEntrance,
+  StaggerGroup,
+  StaggerItem,
+} from "@/components/ui/MotionPrimitives";
 import { StatusBadge } from "@/components/ui/DataState";
 
 const ROLES = [
@@ -101,33 +105,35 @@ export default function RolesPage() {
           </div>
           <Link
             href="/login"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-transform active:scale-[0.98]"
           >
             Sign in with demo roles
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {ROLES.map((item) => (
-            <div key={item.role} className="ww-card flex flex-col justify-between p-5">
-              <div>
-                <h2 className="text-[16px] font-medium text-ww-fg">
-                  {item.role}
-                </h2>
-                <div className="mt-2">
-                  <StatusBadge label={item.scope} tone="neutral" />
+            <StaggerItem key={item.role}>
+              <div className="ww-card flex h-full flex-col justify-between p-5 transition-colors hover:border-ww-hairline-strong">
+                <div>
+                  <h2 className="text-[16px] font-medium text-ww-fg">
+                    {item.role}
+                  </h2>
+                  <div className="mt-2">
+                    <StatusBadge label={item.scope} tone="neutral" />
+                  </div>
+                  <p className="mt-3 text-[13px] leading-relaxed text-ww-fg-secondary">
+                    {item.summary}
+                  </p>
                 </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-ww-fg-secondary">
-                  {item.summary}
+                <p className="mt-4 border-t border-ww-hairline pt-3 font-mono text-[11px] text-ww-fg-muted">
+                  {item.demoEmail}
                 </p>
               </div>
-              <p className="mt-4 border-t border-ww-hairline pt-3 font-mono text-[11px] text-ww-fg-muted">
-                {item.demoEmail}
-              </p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
 
         <div className="ww-card overflow-x-auto p-6">
           <h2 className="text-[18px] font-medium text-ww-fg">

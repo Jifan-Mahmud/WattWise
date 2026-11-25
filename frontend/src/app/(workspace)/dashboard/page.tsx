@@ -10,10 +10,15 @@ import {
   Check,
   CircleCheck,
 } from "@gravity-ui/icons";
+import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { downloadCsvExport } from "@/lib/api";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import {
+  MotionBar,
+  PageEntrance,
+  UNSLOP_EASE,
+} from "@/components/ui/MotionPrimitives";
 import {
   StatCard,
   StatusBadge,
@@ -439,13 +444,20 @@ export default function DashboardPage() {
                   setEndDate("");
                   setPreset(p.id);
                 }}
-                className={`h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
+                className={`relative h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
                   active
-                    ? "bg-ww-raised font-medium text-ww-fg"
+                    ? "font-medium text-ww-fg"
                     : "text-ww-fg-secondary hover:text-ww-fg"
                 }`}
               >
-                {p.label}
+                {active && (
+                  <motion.span
+                    layoutId="dashboard-preset-pill"
+                    transition={{ duration: 0.2, ease: UNSLOP_EASE }}
+                    className="absolute inset-0 rounded-[6px] bg-ww-raised"
+                  />
+                )}
+                <span className="relative z-10">{p.label}</span>
               </button>
             );
           })}
@@ -502,38 +514,59 @@ export default function DashboardPage() {
       </div>
 
       {/* Live Telemetry Ticker (when Live monitor active or recent ticks exist) */}
-      {(liveMode || liveFeed.length > 0) && (
-        <div className="ww-card flex flex-col justify-between gap-3 px-5 py-3.5 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3">
-            <span
-              className={`h-2 w-2 rounded-full ${
-                liveMode ? "animate-pulse bg-ww-positive" : "bg-ww-fg-muted"
-              }`}
-            />
-            <div>
-              <p className="text-[13px] font-medium text-ww-fg">
-                Live meter simulation stream
-              </p>
-              <p className="font-mono text-[12px] text-ww-fg-muted">
-                {liveFeed[0]
-                  ? `Latest: ${liveFeed[0].meterCode} · ${liveFeed[0].consumptionKwh} kWh ($${liveFeed[0].estimatedCost})`
-                  : "Waiting for next telemetry tick…"}
-              </p>
+      <AnimatePresence initial={false}>
+        {(liveMode || liveFeed.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: UNSLOP_EASE }}
+            className="ww-card flex flex-col justify-between gap-3 px-5 py-3.5 sm:flex-row sm:items-center"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  liveMode ? "bg-ww-positive" : "bg-ww-fg-muted"
+                }`}
+              />
+              <div>
+                <p className="text-[13px] font-medium text-ww-fg">
+                  Live meter simulation stream
+                </p>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.p
+                    key={
+                      liveFeed[0]
+                        ? `${liveFeed[0].meterCode}-${liveFeed[0].consumptionKwh}`
+                        : "waiting"
+                    }
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: UNSLOP_EASE }}
+                    className="font-mono text-[12px] text-ww-fg-muted"
+                  >
+                    {liveFeed[0]
+                      ? `Latest: ${liveFeed[0].meterCode} · ${liveFeed[0].consumptionKwh} kWh ($${liveFeed[0].estimatedCost})`
+                      : "Waiting for next telemetry tick…"}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
-          {canWrite && (
-            <Button
-              variant="outline"
-              size="sm"
-              isDisabled={simulating}
-              onPress={runSimulationTick}
-            >
-              <ArrowRotateRight className="mr-1.5 h-3.5 w-3.5" />
-              {simulating ? "Sampling…" : "Sample tick now"}
-            </Button>
-          )}
-        </div>
-      )}
+            {canWrite && (
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={simulating}
+                onPress={runSimulationTick}
+              >
+                <ArrowRotateRight className="mr-1.5 h-3.5 w-3.5" />
+                {simulating ? "Sampling…" : "Sample tick now"}
+              </Button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && <ErrorPanel message={error} onRetry={() => loadOverview(true)} />}
 
@@ -554,6 +587,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <StatCard
                 label="Total consumption"
+                numericValue={Math.round(kpis.totalKwh)}
                 value={kpis.totalKwh.toLocaleString(undefined, {
                   maximumFractionDigits: 0,
                 })}
@@ -563,6 +597,8 @@ export default function DashboardPage() {
               />
               <StatCard
                 label="Total electricity cost"
+                numericValue={Math.round(kpis.totalCost)}
+                prefix="$"
                 value={`$${kpis.totalCost.toLocaleString(undefined, {
                   maximumFractionDigits: 0,
                 })}`}
@@ -572,6 +608,7 @@ export default function DashboardPage() {
               />
               <StatCard
                 label="Average daily usage"
+                numericValue={Math.round(kpis.avgDailyKwh)}
                 value={kpis.avgDailyKwh.toLocaleString(undefined, {
                   maximumFractionDigits: 0,
                 })}
@@ -580,12 +617,16 @@ export default function DashboardPage() {
               />
               <StatCard
                 label="Peak reading"
+                numericValue={kpis.peakKwh}
+                decimals={1}
                 value={kpis.peakKwh.toFixed(1)}
                 unit="kWh"
                 delta={`Lowest ${kpis.lowestKwh.toFixed(1)} kWh`}
               />
               <StatCard
                 label="System efficiency"
+                numericValue={kpis.efficiencyScore}
+                suffix="%"
                 value={`${kpis.efficiencyScore}%`}
                 delta={`${kpis.anomalyCount} threshold anomalies`}
                 deltaTone={kpis.anomalyCount > 0 ? "negative" : "positive"}
@@ -604,28 +645,42 @@ export default function DashboardPage() {
                       Daily total electricity draw with baseline reference line
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 rounded-[8px] border border-ww-hairline bg-ww-bg/50 p-1">
                     <button
                       type="button"
                       onClick={() => setChartMode("area")}
-                      className={`h-7 rounded-[6px] border px-2.5 text-[12px] transition-colors ${
+                      className={`relative h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
                         chartMode === "area"
-                          ? "border-ww-hairline-strong bg-ww-raised text-ww-fg"
-                          : "border-transparent text-ww-fg-muted hover:text-ww-fg"
+                          ? "font-medium text-ww-fg"
+                          : "text-ww-fg-muted hover:text-ww-fg"
                       }`}
                     >
-                      Curve
+                      {chartMode === "area" && (
+                        <motion.span
+                          layoutId="dashboard-chart-mode"
+                          transition={{ duration: 0.2, ease: UNSLOP_EASE }}
+                          className="absolute inset-0 rounded-[6px] border border-ww-hairline-strong bg-ww-raised"
+                        />
+                      )}
+                      <span className="relative z-10">Curve</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setChartMode("bar")}
-                      className={`h-7 rounded-[6px] border px-2.5 text-[12px] transition-colors ${
+                      className={`relative h-7 rounded-[6px] px-2.5 text-[12px] transition-colors ${
                         chartMode === "bar"
-                          ? "border-ww-hairline-strong bg-ww-raised text-ww-fg"
-                          : "border-transparent text-ww-fg-muted hover:text-ww-fg"
+                          ? "font-medium text-ww-fg"
+                          : "text-ww-fg-muted hover:text-ww-fg"
                       }`}
                     >
-                      Bars
+                      {chartMode === "bar" && (
+                        <motion.span
+                          layoutId="dashboard-chart-mode"
+                          transition={{ duration: 0.2, ease: UNSLOP_EASE }}
+                          className="absolute inset-0 rounded-[6px] border border-ww-hairline-strong bg-ww-raised"
+                        />
+                      )}
+                      <span className="relative z-10">Bars</span>
                     </button>
                   </div>
                 </div>
@@ -679,15 +734,14 @@ export default function DashboardPage() {
                             </span>
                           </div>
                           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ww-raised">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${pct}%`,
-                                backgroundColor:
-                                  idx === 0
-                                    ? "var(--ww-accent)"
-                                    : "var(--ww-fg-muted)",
-                              }}
+                            <MotionBar
+                              pct={pct}
+                              color={
+                                idx === 0
+                                  ? "var(--ww-accent)"
+                                  : "var(--ww-fg-muted)"
+                              }
+                              delay={idx * 0.05}
                             />
                           </div>
                           <div className="mt-1 flex items-center justify-between font-mono text-[11px] text-ww-fg-muted">
@@ -762,70 +816,77 @@ export default function DashboardPage() {
                       No open alerts for this organization.
                     </p>
                   ) : (
-                    overview.activeAlerts.map((alert) => (
-                      <div
-                        key={alert._id}
-                        className="flex flex-col justify-between gap-3 py-3.5 sm:flex-row sm:items-center"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <StatusBadge
-                              label={alert.severity}
-                              tone={
-                                alert.severity === "High"
-                                  ? "negative"
-                                  : alert.severity === "Medium"
-                                  ? "warning"
-                                  : "neutral"
-                              }
-                            />
-                            <StatusBadge
-                              label={alert.status}
-                              tone={
-                                alert.status === "New" ? "accent" : "neutral"
-                              }
-                            />
-                            <span className="font-mono text-[11px] text-ww-fg-muted">
-                              {alert.meterCode}
-                            </span>
+                    <AnimatePresence initial={false}>
+                      {overview.activeAlerts.map((alert) => (
+                        <motion.div
+                          key={alert._id}
+                          layout
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, height: 0, overflow: "hidden" }}
+                          transition={{ duration: 0.22, ease: UNSLOP_EASE }}
+                          className="flex flex-col justify-between gap-3 py-3.5 sm:flex-row sm:items-center"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusBadge
+                                label={alert.severity}
+                                tone={
+                                  alert.severity === "High"
+                                    ? "negative"
+                                    : alert.severity === "Medium"
+                                    ? "warning"
+                                    : "neutral"
+                                }
+                              />
+                              <StatusBadge
+                                label={alert.status}
+                                tone={
+                                  alert.status === "New" ? "accent" : "neutral"
+                                }
+                              />
+                              <span className="font-mono text-[11px] text-ww-fg-muted">
+                                {alert.meterCode}
+                              </span>
+                            </div>
+                            <p className="mt-1.5 truncate text-[13px] font-medium text-ww-fg">
+                              {alert.title}
+                            </p>
+                            <p className="mt-0.5 font-mono text-[12px] text-ww-fg-muted">
+                              {alert.buildingName} · {alert.measuredValue}{" "}
+                              {alert.unit} vs {alert.thresholdValue} {alert.unit}
+                            </p>
                           </div>
-                          <p className="mt-1.5 truncate text-[13px] font-medium text-ww-fg">
-                            {alert.title}
-                          </p>
-                          <p className="mt-0.5 font-mono text-[12px] text-ww-fg-muted">
-                            {alert.buildingName} · {alert.measuredValue}{" "}
-                            {alert.unit} vs {alert.thresholdValue} {alert.unit}
-                          </p>
-                        </div>
 
-                        {canTriageAlerts && (
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            {alert.status === "New" && (
+                          {canTriageAlerts && (
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              {alert.status === "New" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onPress={() =>
+                                    handleAlertAction(alert._id, "Acknowledged")
+                                  }
+                                >
+                                  <Check className="mr-1 h-3.5 w-3.5" />
+                                  Ack
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onPress={() =>
-                                  handleAlertAction(alert._id, "Acknowledged")
+                                  handleAlertAction(alert._id, "Resolved")
                                 }
                               >
-                                <Check className="mr-1 h-3.5 w-3.5" />
-                                Ack
+                                <CircleCheck className="mr-1 h-3.5 w-3.5 text-ww-positive" />
+                                Resolve
                               </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onPress={() =>
-                                handleAlertAction(alert._id, "Resolved")
-                              }
-                            >
-                              <CircleCheck className="mr-1 h-3.5 w-3.5 text-ww-positive" />
-                              Resolve
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   )}
                 </div>
               </div>

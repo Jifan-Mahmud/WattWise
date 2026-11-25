@@ -5,7 +5,12 @@ import { Magnifier, Plus, TrashBin } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import {
+  MotionBar,
+  PageEntrance,
+  StaggerGroup,
+  StaggerItem,
+} from "@/components/ui/MotionPrimitives";
 import {
   StatusBadge,
   LoadingPanel,
@@ -176,14 +181,17 @@ export default function BuildingsPage() {
           description="Register a facility building or adjust your search query."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <StaggerGroup className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {buildings.map((b) => {
             const targetPct = Math.min(
               100,
               Math.round((b.mtdKwh / Math.max(1, b.targetMonthlyKwh)) * 100)
             );
             return (
-              <div key={b._id} className="ww-card flex flex-col justify-between p-5">
+              <StaggerItem
+                key={b._id}
+                className="ww-card flex flex-col justify-between p-5 transition-colors hover:border-ww-hairline-strong"
+              >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -235,13 +243,13 @@ export default function BuildingsPage() {
                       </span>
                     </div>
                     <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ww-raised">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${targetPct}%`,
-                          backgroundColor:
-                            targetPct > 90 ? "var(--ww-accent)" : "var(--ww-positive)",
-                        }}
+                      <MotionBar
+                        pct={targetPct}
+                        color={
+                          targetPct > 90
+                            ? "var(--ww-accent)"
+                            : "var(--ww-positive)"
+                        }
                       />
                     </div>
                     <p className="mt-1.5 tabular-nums font-mono text-[12px] text-ww-fg-muted">
@@ -270,10 +278,10 @@ export default function BuildingsPage() {
                     </button>
                   </div>
                 )}
-              </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
       )}
 
       <ModalFrame

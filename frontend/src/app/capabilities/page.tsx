@@ -12,7 +12,11 @@ import {
   ArrowRight,
 } from "@gravity-ui/icons";
 import { PublicSiteShell } from "@/components/layout/PublicSiteShell";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import {
+  PageEntrance,
+  StaggerGroup,
+  StaggerItem,
+} from "@/components/ui/MotionPrimitives";
 
 const CAPABILITIES = [
   {
@@ -70,29 +74,31 @@ export default function CapabilitiesPage() {
           </div>
           <Link
             href="/login"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-transform active:scale-[0.98]"
           >
             Test capabilities in demo
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <StaggerGroup className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {CAPABILITIES.map((cap) => {
             const Icon = cap.icon;
             return (
-              <div key={cap.title} className="ww-card p-6">
-                <Icon className="h-4 w-4 text-ww-accent" />
-                <h2 className="mt-4 text-[16px] font-medium text-ww-fg">
-                  {cap.title}
-                </h2>
-                <p className="mt-2 text-[14px] leading-relaxed text-ww-fg-secondary">
-                  {cap.description}
-                </p>
-              </div>
+              <StaggerItem key={cap.title}>
+                <div className="ww-card h-full p-6 transition-colors hover:border-ww-hairline-strong">
+                  <Icon className="h-4 w-4 text-ww-accent" />
+                  <h2 className="mt-4 text-[16px] font-medium text-ww-fg">
+                    {cap.title}
+                  </h2>
+                  <p className="mt-2 text-[14px] leading-relaxed text-ww-fg-secondary">
+                    {cap.description}
+                  </p>
+                </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
       </PageEntrance>
     </PublicSiteShell>
   );

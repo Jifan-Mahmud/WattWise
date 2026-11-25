@@ -12,42 +12,47 @@ import {
   ArrowRight,
 } from "@gravity-ui/icons";
 import { PublicSiteShell } from "@/components/layout/PublicSiteShell";
-import { PageEntrance } from "@/components/ui/MotionPrimitives";
+import {
+  PageEntrance,
+  StaggerGroup,
+  StaggerItem,
+  AnimatedNumber,
+} from "@/components/ui/MotionPrimitives";
 
 const HIERARCHY_NODES = [
   {
     label: "Organizations",
-    count: "3",
+    count: 3,
     detail: "Northgrid Commercial, Apex Semiconductor, Metro University",
     icon: ShieldCheck,
   },
   {
     label: "Buildings",
-    count: "12",
+    count: 12,
     detail: "Offices, cleanrooms, logistics hubs, and campus facilities",
     icon: Factory,
   },
   {
     label: "Floors",
-    count: "36",
+    count: 36,
     detail: "3 levels per building with square-footage intensity tracking",
     icon: Layers,
   },
   {
     label: "Departments",
-    count: "60",
+    count: 60,
     detail: "HVAC, Chiller, Server Room, Lighting, and Production budgets",
     icon: BranchesRight,
   },
   {
     label: "Meters",
-    count: "84",
+    count: 84,
     detail: "Real-time voltage, power factor, threshold, and health telemetry",
     icon: PlugConnection,
   },
   {
     label: "Energy records",
-    count: "60,480",
+    count: 60480,
     detail: "Sep–Nov time-series records indexed for sub-second queries",
     icon: Database,
   },
@@ -93,40 +98,40 @@ export default function ArchitecturePage() {
           </div>
           <Link
             href="/records"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-transform active:scale-[0.98]"
           >
             Inspect 60k+ records
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        {/* 6-tier Data Hierarchy */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {HIERARCHY_NODES.map((node) => {
             const Icon = node.icon;
             return (
-              <div key={node.label} className="ww-card p-5">
-                <div className="flex items-center justify-between">
-                  <Icon className="h-4 w-4 text-ww-accent" />
-                  <span className="font-mono text-[11px] text-ww-fg-muted">
-                    Indexed
-                  </span>
+              <StaggerItem key={node.label}>
+                <div className="ww-card h-full p-5 transition-colors hover:border-ww-hairline-strong">
+                  <div className="flex items-center justify-between">
+                    <Icon className="h-4 w-4 text-ww-accent" />
+                    <span className="font-mono text-[11px] text-ww-fg-muted">
+                      Indexed
+                    </span>
+                  </div>
+                  <p className="mt-4 tabular-nums text-[28px] font-medium text-ww-fg">
+                    <AnimatedNumber value={node.count} />
+                  </p>
+                  <p className="mt-1 text-[15px] font-medium text-ww-fg">
+                    {node.label}
+                  </p>
+                  <p className="mt-1.5 text-[13px] text-ww-fg-secondary">
+                    {node.detail}
+                  </p>
                 </div>
-                <p className="mt-4 tabular-nums text-[28px] font-medium text-ww-fg">
-                  {node.count}
-                </p>
-                <p className="mt-1 text-[15px] font-medium text-ww-fg">
-                  {node.label}
-                </p>
-                <p className="mt-1.5 text-[13px] text-ww-fg-secondary">
-                  {node.detail}
-                </p>
-              </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerGroup>
 
-        {/* Technical Stack Table */}
         <div className="ww-card overflow-x-auto p-6">
           <h2 className="text-[18px] font-medium text-ww-fg">
             Full-stack system layers
