@@ -1,12 +1,19 @@
 import { betterAuth } from "better-auth";
-import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
+import { mongoClient } from "./mongodb";
 
-const client = new MongoClient("mongodb://localhost:27017/database");
-const db = client.db();
+const db = mongoClient.db(process.env.MONGODB_DB_NAME || "wattwise");
 
 export const auth = betterAuth({
   database: mongodbAdapter(db, {
-    client,
+    client: mongoClient,
   }),
+  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: true,
+    minPasswordLength: 8,
+  },
+  trustedOrigins: ["http://localhost:3000", "http://127.0.0.1:3000"],
 });
