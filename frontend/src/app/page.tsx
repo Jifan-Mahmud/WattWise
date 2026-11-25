@@ -62,7 +62,7 @@ export default function LandingPage() {
   return (
     <PublicSiteShell>
       {/* Atmospheric Scene Hero */}
-      <section className="relative overflow-hidden border-b border-ww-hairline bg-[#141415] text-[#ededed]">
+      <section className="relative overflow-hidden border-b border-ww-hairline bg-ww-bg text-ww-fg">
         <motion.div
           initial={{ opacity: 0.55, scale: 1.03 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -75,20 +75,18 @@ export default function LandingPage() {
             width={1600}
             height={900}
             priority
-            className="h-full w-full object-cover object-right opacity-85"
+            className="h-full w-full object-cover object-right opacity-35 mix-blend-multiply dark:opacity-85 dark:mix-blend-normal"
           />
           <div
             className="absolute inset-0"
             style={{
-              background:
-                "linear-gradient(90deg, #141415 0%, #141415 36%, rgba(20,20,21,0.78) 62%, rgba(20,20,21,0.22) 100%)",
+              background: "var(--ww-hero-fade-x)",
             }}
           />
           <div
             className="absolute inset-0"
             style={{
-              background:
-                "linear-gradient(0deg, #141415 0%, rgba(20,20,21,0.45) 30%, transparent 65%)",
+              background: "var(--ww-hero-fade-y)",
             }}
           />
         </motion.div>
@@ -96,20 +94,20 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 lg:px-8 lg:pt-28">
           <StaggerGroup className="max-w-xl">
             <StaggerItem>
-              <div className="inline-flex items-center gap-2 text-[13px] text-[#a1a1a6]">
-                <span className="h-2 w-2 rounded-full bg-[#e57a25]" />
+              <div className="inline-flex items-center gap-2 text-[13px] text-ww-fg-secondary">
+                <span className="h-2 w-2 rounded-full bg-ww-accent" />
                 <span>Real-time grid and facility telemetry</span>
               </div>
             </StaggerItem>
 
             <StaggerItem>
-              <h1 className="mt-4 text-[40px] font-medium leading-[1.06] tracking-[-0.03em] text-[#ededed] sm:text-[56px] lg:text-[64px]">
+              <h1 className="mt-4 text-[40px] font-medium leading-[1.06] tracking-[-0.03em] text-ww-fg sm:text-[56px] lg:text-[64px]">
                 Energy intelligence for every building
               </h1>
             </StaggerItem>
 
             <StaggerItem>
-              <p className="mt-5 max-w-[34rem] text-[18px] leading-[1.55] text-[#a1a1a6]">
+              <p className="mt-5 max-w-[34rem] text-[18px] leading-[1.55] text-ww-fg-secondary">
                 Monitor sub-meter electricity consumption, catch off-hours load
                 anomalies, and lower tariff costs across buildings, floors, and
                 departments.
@@ -120,14 +118,14 @@ export default function LandingPage() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   href={user ? "/dashboard" : "/login"}
-                  className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-[#ededed] px-5 text-[14px] font-medium text-[#141415] transition-transform hover:opacity-95 active:scale-[0.98]"
+                  className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-ww-fg px-5 text-[14px] font-medium text-ww-bg transition-transform hover:opacity-95 active:scale-[0.98]"
                 >
                   {user ? "Open workspace" : "Launch demo workspace"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/platform"
-                  className="inline-flex h-11 items-center rounded-[8px] border border-[rgba(237,237,237,0.16)] bg-[#19191b]/80 px-5 text-[14px] font-medium text-[#ededed] transition-colors hover:bg-[#232325] active:scale-[0.98]"
+                  className="inline-flex h-11 items-center rounded-[8px] border border-ww-hairline-strong bg-ww-card/80 px-5 text-[14px] font-medium text-ww-fg transition-colors hover:bg-ww-raised active:scale-[0.98]"
                 >
                   Explore platform
                 </Link>
@@ -142,81 +140,81 @@ export default function LandingPage() {
             transition={{ duration: 0.55, delay: 0.18, ease: UNSLOP_EASE }}
             className="mt-16 translate-y-2"
           >
-            <div className="rounded-t-[16px] border border-b-0 border-[rgba(237,237,237,0.12)] bg-[#141415] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-[rgba(237,237,237,0.08)] px-5 py-3">
+            <div className="rounded-t-[16px] border border-b-0 border-ww-hairline-strong bg-ww-card shadow-2xl">
+              <div className="flex items-center justify-between border-b border-ww-hairline bg-ww-raised/50 px-5 py-3">
                 <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#2e2e32]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#2e2e32]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#2e2e32]" />
-                  <span className="ml-3 font-mono text-[12px] text-[#85858b]">
+                  <span className="h-2.5 w-2.5 rounded-full bg-ww-fg-muted/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-ww-fg-muted/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-ww-fg-muted/30" />
+                  <span className="ml-3 font-mono text-[12px] text-ww-fg-muted">
                     Northgrid Commercial Holdings · Overview
                   </span>
                 </div>
-                <span className="font-mono text-[12px] text-[#a1a1a6]">
+                <span className="font-mono text-[12px] text-ww-fg-secondary">
                   Nov 2026
                 </span>
               </div>
 
               <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-12">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:col-span-12">
-                  <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-4">
-                    <p className="text-[12px] text-[#a1a1a6]">Total consumption</p>
-                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-[#ededed]">
+                  <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-4">
+                    <p className="text-[12px] text-ww-fg-secondary">Total consumption</p>
+                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-ww-fg">
                       <AnimatedNumber value={621306} />{" "}
-                      <span className="font-mono text-[12px] text-[#85858b]">
+                      <span className="font-mono text-[12px] text-ww-fg-muted">
                         kWh
                       </span>
                     </p>
-                    <p className="mt-2 text-[12px] text-[#4cc38a]">
+                    <p className="mt-2 text-[12px] text-ww-positive">
                       30-day verified total
                     </p>
                   </div>
-                  <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-4">
-                    <p className="text-[12px] text-[#a1a1a6]">Electricity cost</p>
-                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-[#ededed]">
+                  <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-4">
+                    <p className="text-[12px] text-ww-fg-secondary">Electricity cost</p>
+                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-ww-fg">
                       <AnimatedNumber value={90089} prefix="$" />
                     </p>
-                    <p className="mt-2 font-mono text-[12px] text-[#85858b]">
+                    <p className="mt-2 font-mono text-[12px] text-ww-fg-muted">
                       $0.145 / kWh tariff
                     </p>
                   </div>
-                  <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-4">
-                    <p className="text-[12px] text-[#a1a1a6]">Peak meter load</p>
-                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-[#ededed]">
+                  <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-4">
+                    <p className="text-[12px] text-ww-fg-secondary">Peak meter load</p>
+                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-ww-fg">
                       <AnimatedNumber value={279.7} decimals={1} />{" "}
-                      <span className="font-mono text-[12px] text-[#85858b]">
+                      <span className="font-mono text-[12px] text-ww-fg-muted">
                         kW
                       </span>
                     </p>
-                    <p className="mt-2 text-[12px] text-[#e57a25]">
+                    <p className="mt-2 text-[12px] text-ww-accent">
                       112 threshold flags
                     </p>
                   </div>
-                  <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-4">
-                    <p className="text-[12px] text-[#a1a1a6]">Efficiency score</p>
-                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-[#ededed]">
+                  <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-4">
+                    <p className="text-[12px] text-ww-fg-secondary">Efficiency score</p>
+                    <p className="mt-2 tabular-nums text-[24px] font-medium leading-none text-ww-fg">
                       <AnimatedNumber value={94.4} decimals={1} suffix="%" />
                     </p>
-                    <p className="mt-2 text-[12px] text-[#4cc38a]">
+                    <p className="mt-2 text-[12px] text-ww-positive">
                       256.0 t CO₂e logged
                     </p>
                   </div>
                 </div>
 
                 {/* Interactive Daily Preview Bars */}
-                <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-5 lg:col-span-8">
+                <div className="rounded-[12px] border border-ww-hairline bg-ww-bg p-5 lg:col-span-8">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className="text-[14px] font-medium text-[#ededed]">
+                      <p className="text-[14px] font-medium text-ww-fg">
                         Daily consumption profile
                       </p>
-                      <p className="text-[12px] text-[#85858b]">
+                      <p className="text-[12px] text-ww-fg-muted">
                         Hover or select any bar to inspect daily load
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 rounded-[6px] border border-[rgba(237,237,237,0.08)] bg-[#232325] px-2.5 py-1 font-mono text-[11px] text-[#ededed]">
-                      <span className="text-[#85858b]">{selectedBar.day}:</span>
-                      <span className="tabular-nums text-[#e57a25]">
+                    <div className="flex items-center gap-2 rounded-[6px] border border-ww-hairline bg-ww-card px-2.5 py-1 font-mono text-[11px] text-ww-fg">
+                      <span className="text-ww-fg-muted">{selectedBar.day}:</span>
+                      <span className="tabular-nums font-medium text-ww-accent">
                         {selectedBar.kwh.toLocaleString()} kWh
                       </span>
                     </div>
@@ -238,7 +236,7 @@ export default function LandingPage() {
                               initial={{ scaleY: 0 }}
                               animate={{
                                 scaleY: 1,
-                                backgroundColor: isActive ? "#e57a25" : "#2b2b2f",
+                                backgroundColor: isActive ? "var(--ww-accent)" : "var(--ww-raised)",
                               }}
                               transition={{
                                 scaleY: {
@@ -254,7 +252,7 @@ export default function LandingPage() {
                           </div>
                           <span
                             className={`font-mono text-[11px] transition-colors ${
-                              isActive ? "text-[#ededed]" : "text-[#85858b]"
+                              isActive ? "font-medium text-ww-fg" : "text-ww-fg-muted"
                             }`}
                           >
                             {bar.short}
@@ -265,47 +263,47 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col justify-between rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-5 lg:col-span-4">
+                <div className="flex flex-col justify-between rounded-[12px] border border-ww-hairline bg-ww-bg p-5 lg:col-span-4">
                   <div>
                     <div className="flex items-center justify-between">
-                      <p className="text-[14px] font-medium text-[#ededed]">
+                      <p className="text-[14px] font-medium text-ww-fg">
                         Active anomaly feed
                       </p>
-                      <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#e57a25]">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#e57a25]" />
+                      <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-ww-accent">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ww-accent" />
                         Live
                       </span>
                     </div>
                     <div className="mt-4 space-y-2.5">
-                      <div className="rounded-[8px] border border-[rgba(237,237,237,0.08)] bg-[#232325] p-3">
+                      <div className="rounded-[8px] border border-ww-hairline bg-ww-card p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[13px] font-medium text-[#ededed]">
+                          <span className="text-[13px] font-medium text-ww-fg">
                             Chiller staging spike
                           </span>
-                          <span className="rounded-[4px] bg-[rgba(229,72,77,0.16)] px-1.5 py-0.5 text-[11px] text-[#e5484d]">
+                          <span className="rounded-[4px] bg-ww-negative-soft px-1.5 py-0.5 text-[11px] font-medium text-ww-negative">
                             High
                           </span>
                         </div>
-                        <p className="mt-1 font-mono text-[11px] text-[#85858b]">
+                        <p className="mt-1 font-mono text-[11px] text-ww-fg-muted">
                           118.4 kWh vs 74.2 kWh baseline
                         </p>
                       </div>
-                      <div className="rounded-[8px] border border-[rgba(237,237,237,0.08)] bg-[#141415] p-3">
+                      <div className="rounded-[8px] border border-ww-hairline bg-ww-card p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[13px] font-medium text-[#ededed]">
+                          <span className="text-[13px] font-medium text-ww-fg">
                             Power factor drift
                           </span>
-                          <span className="rounded-[4px] bg-[rgba(234,179,8,0.14)] px-1.5 py-0.5 text-[11px] text-[#eab308]">
+                          <span className="rounded-[4px] bg-ww-warning-soft px-1.5 py-0.5 text-[11px] font-medium text-ww-warning">
                             Medium
                           </span>
                         </div>
-                        <p className="mt-1 font-mono text-[11px] text-[#85858b]">
+                        <p className="mt-1 font-mono text-[11px] text-ww-fg-muted">
                           0.87 PF on Meridian Plaza Feeder 02
                         </p>
                       </div>
                     </div>
                   </div>
-                  <p className="mt-4 text-[12px] text-[#85858b]">
+                  <p className="mt-4 text-[12px] text-ww-fg-muted">
                     Sign in to inspect 60,480 live MongoDB readings.
                   </p>
                 </div>
