@@ -3,23 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRight,
-  ChartLine,
-  ShieldCheck,
-  Bell,
-  Factory,
-  Layers,
-  BranchesRight,
-  PlugConnection,
-  Database,
-  Sun,
-  Moon,
-} from "@gravity-ui/icons";
-import { Button } from "@heroui/react";
+import { ArrowRight } from "@gravity-ui/icons";
 import { useWattWise } from "@/components/providers/AppProviders";
-import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
-import { StatusBadge } from "@/components/ui/DataState";
+import { PublicSiteShell } from "@/components/layout/PublicSiteShell";
+import { PageEntrance } from "@/components/ui/MotionPrimitives";
 
 const PREVIEW_BARS = [
   { day: "Mon", kwh: 20400, active: false },
@@ -34,114 +21,34 @@ const PREVIEW_BARS = [
   { day: "Wed", kwh: 28100, active: true },
 ];
 
-const ROLE_CAPABILITIES = [
+const QUICK_ROUTES = [
   {
-    role: "Organization Admin",
-    scope: "Full organization",
-    summary:
-      "Configure buildings, floors, departments, meters, user roles, and portfolio settings.",
+    href: "/platform",
+    title: "Platform workspace",
+    summary: "Explore live overview monitoring, simulation ticks, and interactive controls.",
   },
   {
-    role: "Facility Manager",
-    scope: "Meters & alerts",
-    summary:
-      "Register meters, tune consumption thresholds, acknowledge spikes, and export reports.",
+    href: "/capabilities",
+    title: "Capabilities",
+    summary: "Time-series aggregation, threshold alerting, CSV/PDF reports, and carbon tracking.",
   },
   {
-    role: "Department Manager",
-    scope: "Assigned departments",
-    summary:
-      "Monitor department costs against budget, inspect load history, and review savings.",
+    href: "/architecture",
+    title: "System architecture",
+    summary: "Multi-organization hierarchy, MongoDB compound indexes, and Better Auth JWT flow.",
   },
   {
-    role: "Viewer",
-    scope: "Read-only",
-    summary:
-      "Inspect dashboards, analytics curves, and historical reports with write protection enforced.",
+    href: "/roles",
+    title: "Role access matrix",
+    summary: "Compare Organization Admin, Facility Manager, Department Manager, and Viewer.",
   },
-];
-
-const HIERARCHY_NODES = [
-  { label: "Organizations", count: "3", icon: ShieldCheck },
-  { label: "Buildings", count: "12", icon: Factory },
-  { label: "Floors", count: "36", icon: Layers },
-  { label: "Departments", count: "60", icon: BranchesRight },
-  { label: "Meters", count: "84", icon: PlugConnection },
-  { label: "Energy records", count: "60,480", icon: Database },
 ];
 
 export default function LandingPage() {
-  const { user, theme, toggleTheme } = useWattWise();
+  const { user } = useWattWise();
 
   return (
-    <div className="min-h-screen bg-ww-bg text-ww-fg">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-40 border-b border-ww-hairline bg-ww-bg/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2.5 text-ww-fg">
-              <WattWiseMark size={20} />
-              <span className="text-[16px] font-semibold tracking-[-0.01em]">
-                WattWise
-              </span>
-            </Link>
-            <nav className="hidden items-center gap-6 text-[14px] text-ww-fg-secondary md:flex">
-              <a href="#preview" className="transition-colors hover:text-ww-fg">
-                Platform
-              </a>
-              <a href="#capabilities" className="transition-colors hover:text-ww-fg">
-                Capabilities
-              </a>
-              <a href="#architecture" className="transition-colors hover:text-ww-fg">
-                Architecture
-              </a>
-              <a href="#roles" className="transition-colors hover:text-ww-fg">
-                Roles
-              </a>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-ww-hairline bg-ww-card text-ww-fg-secondary transition-colors hover:text-ww-fg"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </button>
-            {user ? (
-              <Link
-                href="/dashboard"
-                className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-opacity hover:opacity-90"
-              >
-                Open dashboard
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="px-3 py-1.5 text-[14px] text-ww-fg-secondary transition-colors hover:text-ww-fg"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex h-9 items-center gap-2 rounded-[8px] bg-ww-fg px-4 text-[14px] font-medium text-ww-bg transition-opacity hover:opacity-90"
-                >
-                  Get started
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
+    <PublicSiteShell>
       {/* Atmospheric Scene Hero */}
       <section className="relative overflow-hidden border-b border-ww-hairline bg-[#141415] text-[#ededed]">
         <div className="pointer-events-none absolute inset-0">
@@ -194,19 +101,18 @@ export default function LandingPage() {
                 {user ? "Open workspace" : "Launch demo workspace"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <a
-                href="#capabilities"
+              <Link
+                href="/platform"
                 className="inline-flex h-11 items-center rounded-[8px] border border-[rgba(237,237,237,0.16)] bg-[#19191b]/80 px-5 text-[14px] font-medium text-[#ededed] transition-colors hover:bg-[#232325]"
               >
                 Explore platform
-              </a>
+              </Link>
             </div>
           </div>
 
           {/* Coded Product Preview rising from bottom edge */}
-          <div id="preview" className="mt-16 translate-y-2">
+          <div className="mt-16 translate-y-2">
             <div className="rounded-t-[16px] border border-b-0 border-[rgba(237,237,237,0.12)] bg-[#141415] shadow-2xl">
-              {/* Window Top Bar */}
               <div className="flex items-center justify-between border-b border-[rgba(237,237,237,0.08)] px-5 py-3">
                 <div className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-[#2e2e32]" />
@@ -221,9 +127,7 @@ export default function LandingPage() {
                 </span>
               </div>
 
-              {/* Preview Body */}
               <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-12">
-                {/* 4 KPI Strip */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:col-span-12">
                   <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-4">
                     <p className="text-[12px] text-[#a1a1a6]">Total consumption</p>
@@ -269,7 +173,6 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Focal Daily Load Bars */}
                 <div className="rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-5 lg:col-span-8">
                   <div className="flex items-center justify-between">
                     <div>
@@ -312,7 +215,6 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Alert Snapshot */}
                 <div className="flex flex-col justify-between rounded-[12px] border border-[rgba(237,237,237,0.08)] bg-[#19191b] p-5 lg:col-span-4">
                   <div>
                     <div className="flex items-center justify-between">
@@ -363,161 +265,31 @@ export default function LandingPage() {
         </PageEntrance>
       </section>
 
-      {/* Capabilities */}
-      <section
-        id="capabilities"
-        className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 lg:px-8"
-      >
-        <div className="max-w-2xl">
-          <p className="text-[13px] text-ww-accent">Capabilities</p>
-          <h2 className="mt-2 text-[28px] font-medium leading-[1.15] tracking-[-0.02em] text-ww-fg sm:text-[34px]">
-            Built for facility engineers and multi-site finance teams
-          </h2>
-        </div>
-
-        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="ww-card p-6">
-            <ChartLine className="h-4 w-4 text-ww-accent" />
-            <h3 className="mt-4 text-[16px] font-medium text-ww-fg">
-              Server-side time-series analytics
-            </h3>
-            <p className="mt-2 text-[14px] leading-relaxed text-ww-fg-secondary">
-              MongoDB aggregation pipelines compute hourly curves, daily totals,
-              monthly baselines, and 7-day load forecasts across tens of thousands
-              of readings.
-            </p>
-          </div>
-          <div className="ww-card p-6">
-            <Bell className="h-4 w-4 text-ww-accent" />
-            <h3 className="mt-4 text-[16px] font-medium text-ww-fg">
-              Threshold rules and anomaly triage
-            </h3>
-            <p className="mt-2 text-[14px] leading-relaxed text-ww-fg-secondary">
-              Define per-building or per-meter kWh limits and spike ratios. Exceeding
-              a threshold automatically creates a trackable New, Acknowledged, or
-              Resolved alert.
-            </p>
-          </div>
-          <div className="ww-card p-6">
-            <ShieldCheck className="h-4 w-4 text-ww-accent" />
-            <h3 className="mt-4 text-[16px] font-medium text-ww-fg">
-              Organization and department isolation
-            </h3>
-            <p className="mt-2 text-[14px] leading-relaxed text-ww-fg-secondary">
-              JWT-verified Better Auth sessions enforce strict tenant isolation,
-              department scoping, duplicate reading guards, and read-only Viewer
-              locks.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Architecture Scale */}
-      <section
-        id="architecture"
-        className="border-y border-ww-hairline bg-ww-card/40 py-16"
-      >
-        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="text-[13px] text-ww-accent">Pre-seeded dataset</p>
-              <h2 className="mt-2 text-[28px] font-medium leading-[1.15] tracking-[-0.02em] text-ww-fg">
-                Full infrastructure hierarchy in MongoDB Atlas
-              </h2>
-            </div>
-            <p className="text-[14px] text-ww-fg-secondary">
-              Every reading maps to meter, department, floor, building, and
-              organization.
-            </p>
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {HIERARCHY_NODES.map((node) => {
-              const Icon = node.icon;
-              return (
-                <div key={node.label} className="ww-card p-4">
-                  <div className="flex items-center justify-between">
-                    <Icon className="h-4 w-4 text-ww-fg-muted" />
-                    <span className="font-mono text-[11px] text-ww-fg-muted">
-                      Active
-                    </span>
-                  </div>
-                  <p className="mt-4 tabular-nums text-[24px] font-medium text-ww-fg">
-                    {node.count}
-                  </p>
-                  <p className="mt-1 text-[13px] text-ww-fg-secondary">
-                    {node.label}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Role Access Matrix */}
-      <section
-        id="roles"
-        className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 lg:px-8"
-      >
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-[13px] text-ww-accent">Role-based access</p>
-            <h2 className="mt-2 text-[28px] font-medium leading-[1.15] tracking-[-0.02em] text-ww-fg">
-              Four distinct operator perspectives
-            </h2>
-          </div>
-          <Link href="/login">
-            <Button variant="outline" size="sm">
-              Test all 4 roles in demo
-            </Button>
-          </Link>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {ROLE_CAPABILITIES.map((item) => (
-            <div key={item.role} className="ww-card flex flex-col justify-between p-5">
+      {/* Dedicated Sub-page Navigation Strip */}
+      <section className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {QUICK_ROUTES.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="ww-card group flex flex-col justify-between p-5 transition-colors hover:border-ww-hairline-strong"
+            >
               <div>
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-[15px] font-medium text-ww-fg">
-                    {item.role}
-                  </h3>
-                </div>
-                <div className="mt-2">
-                  <StatusBadge label={item.scope} tone="neutral" />
-                </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-ww-fg-secondary">
+                <h2 className="text-[16px] font-medium text-ww-fg">
+                  {item.title}
+                </h2>
+                <p className="mt-2 text-[13px] leading-relaxed text-ww-fg-secondary">
                   {item.summary}
                 </p>
               </div>
-            </div>
+              <span className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-ww-accent">
+                Open page
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </Link>
           ))}
         </div>
       </section>
-
-      {/* Quiet Footer */}
-      <footer className="border-t border-ww-hairline py-8">
-        <div className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-4 px-4 text-[13px] text-ww-fg-muted sm:flex-row sm:items-center sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2.5 text-ww-fg">
-            <WattWiseMark size={18} />
-            <span className="font-medium">WattWise</span>
-            <span className="text-ww-fg-muted">
-              · Smart Energy Consumption Intelligence
-            </span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link href="/login" className="hover:text-ww-fg">
-              Log in
-            </Link>
-            <Link href="/register" className="hover:text-ww-fg">
-              Create account
-            </Link>
-            <Link href="/dashboard" className="hover:text-ww-fg">
-              Workspace
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicSiteShell>
   );
 }
