@@ -24,7 +24,6 @@ import {
   ArrowRightFromSquare,
   ChevronRight,
 } from "@gravity-ui/icons";
-import { Button } from "@heroui/react";
 import { useWattWise, type UserRole } from "@/components/providers/AppProviders";
 import { WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { StatusBadge } from "@/components/ui/DataState";
@@ -295,20 +294,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             {user.role === "Viewer" && (
               <StatusBadge label="Read-only" tone="neutral" />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              isIconOnly
+            <button
+              type="button"
               aria-label="Toggle theme"
-              onPress={toggleTheme}
-              className="h-8 w-8 border-ww-hairline bg-ww-card text-ww-fg-secondary hover:text-ww-fg"
+              onClick={toggleTheme}
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-ww-hairline-strong bg-ww-card text-ww-fg transition-colors hover:bg-ww-raised"
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4" />
               ) : (
                 <Moon className="h-4 w-4" />
               )}
-            </Button>
+            </button>
           </div>
         </header>
 

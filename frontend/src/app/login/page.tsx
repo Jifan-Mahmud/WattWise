@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, TriangleExclamation } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { signIn } from "@/lib/auth-client";
-import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-users";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { StatusBadge } from "@/components/ui/DataState";
