@@ -1,27 +1,176 @@
 @import "tailwindcss";
-@import "@heroui/styles"; 
+@import "@heroui/styles";
 
-:root {
-  --background: #ffffff;
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+.light,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Unslop Light Graphite Ramp */
+  --ww-sidebar: #f4f4f5;
+  --ww-bg: #fafafa;
+  --ww-card: #ffffff;
+  --ww-raised: #f0f0f2;
+  --ww-hairline: rgba(23, 23, 23, 0.08);
+  --ww-hairline-strong: rgba(23, 23, 23, 0.14);
+
+  --ww-fg: #171717;
+  --ww-fg-secondary: #525252;
+  --ww-fg-muted: #737373;
+
+  --ww-accent: #c85c08;
+  --ww-accent-soft: rgba(200, 92, 8, 0.1);
+  --ww-accent-fg: #ffffff;
+
+  --ww-positive: #16a34a;
+  --ww-positive-soft: rgba(22, 163, 74, 0.1);
+  --ww-negative: #dc2626;
+  --ww-negative-soft: rgba(220, 38, 38, 0.1);
+  --ww-warning: #ca8a04;
+  --ww-warning-soft: rgba(202, 138, 4, 0.12);
+
+  /* HeroUI v3 token mapping */
+  --background: #fafafa;
   --foreground: #171717;
+  --surface: #ffffff;
+  --surface-foreground: #171717;
+  --surface-secondary: #f4f4f5;
+  --surface-tertiary: #ededf0;
+  --overlay: #ffffff;
+  --overlay-foreground: #171717;
+  --muted: #737373;
+  --border: rgba(23, 23, 23, 0.09);
+  --separator: rgba(23, 23, 23, 0.08);
+  --accent: #171717;
+  --accent-foreground: #fafafa;
+  --field-background: #ffffff;
+  --field-border: rgba(23, 23, 23, 0.14);
+  --field-border-width: 1px;
+  --radius: 0.5rem;
+}
+
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Unslop Dark Graphite Ramp */
+  --ww-sidebar: #0f0f10;
+  --ww-bg: #141415;
+  --ww-card: #19191b;
+  --ww-raised: #232325;
+  --ww-hairline: rgba(237, 237, 237, 0.08);
+  --ww-hairline-strong: rgba(237, 237, 237, 0.15);
+
+  --ww-fg: #ededed;
+  --ww-fg-secondary: #a1a1a6;
+  --ww-fg-muted: #85858b;
+
+  --ww-accent: #e57a25;
+  --ww-accent-soft: rgba(229, 122, 37, 0.14);
+  --ww-accent-fg: #141415;
+
+  --ww-positive: #4cc38a;
+  --ww-positive-soft: rgba(76, 195, 138, 0.12);
+  --ww-negative: #e5484d;
+  --ww-negative-soft: rgba(229, 72, 77, 0.12);
+  --ww-warning: #eab308;
+  --ww-warning-soft: rgba(234, 179, 8, 0.12);
+
+  /* HeroUI v3 token mapping */
+  --background: #141415;
+  --foreground: #ededed;
+  --surface: #19191b;
+  --surface-foreground: #ededed;
+  --surface-secondary: #232325;
+  --surface-tertiary: #2b2b2e;
+  --overlay: #19191b;
+  --overlay-foreground: #ededed;
+  --muted: #85858b;
+  --border: rgba(237, 237, 237, 0.09);
+  --separator: rgba(237, 237, 237, 0.08);
+  --accent: #ededed;
+  --accent-foreground: #141415;
+  --field-background: #19191b;
+  --field-border: rgba(237, 237, 237, 0.12);
+  --field-border-width: 1px;
+  --radius: 0.5rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ww-sidebar: var(--ww-sidebar);
+  --color-ww-bg: var(--ww-bg);
+  --color-ww-card: var(--ww-card);
+  --color-ww-raised: var(--ww-raised);
+  --color-ww-hairline: var(--ww-hairline);
+  --color-ww-hairline-strong: var(--ww-hairline-strong);
+  --color-ww-fg: var(--ww-fg);
+  --color-ww-fg-secondary: var(--ww-fg-secondary);
+  --color-ww-fg-muted: var(--ww-fg-muted);
+  --color-ww-accent: var(--ww-accent);
+  --color-ww-accent-soft: var(--ww-accent-soft);
+  --color-ww-accent-fg: var(--ww-accent-fg);
+  --color-ww-positive: var(--ww-positive);
+  --color-ww-positive-soft: var(--ww-positive-soft);
+  --color-ww-negative: var(--ww-negative);
+  --color-ww-negative-soft: var(--ww-negative-soft);
+  --color-ww-warning: var(--ww-warning);
+  --color-ww-warning-soft: var(--ww-warning-soft);
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--ww-bg);
+  color: var(--ww-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle active row top highlight on dark themes (no glow) */
+.dark .ww-active-row {
+  background-color: var(--ww-raised);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--ww-hairline-strong);
+}
+
+.light .ww-active-row {
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ww-hairline-strong);
+}
+
+.ww-card {
+  background-color: var(--ww-card);
+  border: 1px solid var(--ww-hairline);
+  border-radius: 12px;
+}
+
+.light .ww-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ww-panel {
+  background-color: var(--ww-card);
+  border: 1px solid var(--ww-hairline);
+  border-radius: 16px;
+}
+
+@media print {
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
 }
