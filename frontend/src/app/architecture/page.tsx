@@ -58,29 +58,6 @@ const HIERARCHY_NODES = [
   },
 ];
 
-const STACK_LAYERS = [
-  {
-    layer: "Frontend Application",
-    tech: "Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, HeroUI v3, Recharts, Motion",
-    role: "Responsive graphite interface, client TTL response cache, and interactive charts.",
-  },
-  {
-    layer: "Authentication & Session Bridge",
-    tech: "Better Auth + @better-auth/mongo-adapter + HS256 JWT",
-    role: "Email/password credentials in MongoDB plus signed bearer tokens for Express.",
-  },
-  {
-    layer: "Backend API & Aggregation Engine",
-    tech: "Node.js, Express 5, Zod, jose-cjs",
-    role: "RBAC enforcement, MongoDB $facet aggregations, CSV cursor streaming, and alerting.",
-  },
-  {
-    layer: "Time-Series Data Store",
-    tech: "MongoDB Atlas (11 collections, 21 compound & unique indexes)",
-    role: "Unique (meterId, timestamp) deduplication and fast scoped aggregations.",
-  },
-];
-
 export default function ArchitecturePage() {
   return (
     <PublicSiteShell>
@@ -131,34 +108,6 @@ export default function ArchitecturePage() {
             );
           })}
         </StaggerGroup>
-
-        <div className="ww-card overflow-x-auto p-6">
-          <h2 className="text-[18px] font-medium text-ww-fg">
-            Full-stack system layers
-          </h2>
-          <table className="mt-4 w-full text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-ww-hairline text-ww-fg-muted">
-                <th className="py-3 pr-4 font-normal">Layer</th>
-                <th className="py-3 pr-4 font-normal">Technologies</th>
-                <th className="py-3 font-normal">Responsibility</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ww-hairline">
-              {STACK_LAYERS.map((s) => (
-                <tr key={s.layer}>
-                  <td className="py-3.5 pr-4 font-medium text-ww-fg">
-                    {s.layer}
-                  </td>
-                  <td className="py-3.5 pr-4 font-mono text-[12px] text-ww-fg-secondary">
-                    {s.tech}
-                  </td>
-                  <td className="py-3.5 text-ww-fg-secondary">{s.role}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </PageEntrance>
     </PublicSiteShell>
   );
