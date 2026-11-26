@@ -10,7 +10,11 @@ import { useWattWise, type UserRole } from "@/components/providers/AppProviders"
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
-import { buildHref, sanitizeRedirectPath } from "@/lib/url-params";
+import {
+  buildHref,
+  formatOAuthError,
+  sanitizeRedirectPath,
+} from "@/lib/url-params";
 
 const ROLES: UserRole[] = [
   "Organization Admin",
@@ -30,9 +34,10 @@ function RegisterFormPanel() {
     paramRole && ROLES.includes(paramRole) ? paramRole : "Organization Admin";
   const initialMode = searchParams.get("mode") === "create" ? "create" : "join";
   const initialOrg = searchParams.get("org") || "";
-  const urlError = searchParams.get("error")
-    ? "Google sign-up failed. Please verify your OAuth callback settings or register with email."
-    : null;
+  const urlError = formatOAuthError(
+    searchParams.get("error"),
+    searchParams.get("error_description")
+  );
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -115,7 +120,6 @@ function RegisterFormPanel() {
         callbackURL: redirectTarget,
         newUserCallbackURL,
         errorCallbackURL: buildHref("/register", {
-          error: "oauth_failed",
           role,
           mode: orgMode === "create" ? "create" : undefined,
           redirect: redirectTarget !== "/dashboard" ? redirectTarget : undefined,

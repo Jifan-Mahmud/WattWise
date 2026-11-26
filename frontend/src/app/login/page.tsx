@@ -10,16 +10,11 @@ import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
-import { buildHref, sanitizeRedirectPath } from "@/lib/url-params";
-
-function formatOAuthError(code: string | null): string | null {
-  if (!code) return null;
-  if (code === "access_denied") return "Google sign-in was cancelled.";
-  if (code === "oauth_session" || code === "oauth_setup") {
-    return "Could not complete Google account setup. Please try again.";
-  }
-  return "Google authentication failed. Please check your Google OAuth settings or try email sign-in.";
-}
+import {
+  buildHref,
+  formatOAuthError,
+  sanitizeRedirectPath,
+} from "@/lib/url-params";
 
 function LoginFormPanel() {
   const router = useRouter();
@@ -28,7 +23,10 @@ function LoginFormPanel() {
 
   const redirectTarget = sanitizeRedirectPath(searchParams.get("redirect"));
   const initialEmail = searchParams.get("email") || "";
-  const urlError = formatOAuthError(searchParams.get("error"));
+  const urlError = formatOAuthError(
+    searchParams.get("error"),
+    searchParams.get("error_description")
+  );
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -64,7 +62,6 @@ function LoginFormPanel() {
         provider: "google",
         callbackURL: redirectTarget,
         errorCallbackURL: buildHref("/login", {
-          error: "oauth_failed",
           redirect: redirectTarget !== "/dashboard" ? redirectTarget : undefined,
         }),
       });

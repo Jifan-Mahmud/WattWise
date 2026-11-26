@@ -96,3 +96,31 @@ export function sanitizeRedirectPath(
   }
   return trimmed;
 }
+
+/**
+ * Translate Better Auth / Google OAuth callback error codes into readable guidance.
+ */
+export function formatOAuthError(
+  code: string | null | undefined,
+  description?: string | null
+): string | null {
+  if (!code) return null;
+  if (code === "access_denied") {
+    return "Google sign-in was cancelled.";
+  }
+  if (code === "state_mismatch") {
+    return "Google sign-in session expired or mismatched. Open the app via http://localhost:3000 and try again.";
+  }
+  if (code === "invalid_code") {
+    return "Google authorization code check failed. Verify GOOGLE_CLIENT_SECRET and http://localhost:3000/api/auth/callback/google in Google Cloud Console.";
+  }
+  if (code === "account_not_linked" || code === "unable_to_link_account") {
+    return "Could not link this Google account to your existing email profile.";
+  }
+  if (code === "oauth_session" || code === "oauth_setup") {
+    return "Could not complete Google account setup. Please try again.";
+  }
+  return description
+    ? `Google authentication failed: ${description}`
+    : `Google authentication failed (${code}).`;
+}
