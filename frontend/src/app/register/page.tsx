@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, TriangleExclamation } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
-import { signUp } from "@/lib/auth-client";
+import { signIn, signUp } from "@/lib/auth-client";
 import { useWattWise, type UserRole } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { buildHref, sanitizeRedirectPath } from "@/lib/url-params";
 
 const ROLES: UserRole[] = [
@@ -29,6 +30,9 @@ function RegisterFormPanel() {
     paramRole && ROLES.includes(paramRole) ? paramRole : "Organization Admin";
   const initialMode = searchParams.get("mode") === "create" ? "create" : "join";
   const initialOrg = searchParams.get("org") || "";
+  const urlError = searchParams.get("error")
+    ? "Google sign-up failed. Please verify your OAuth callback settings or register with email."
+    : null;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -37,7 +41,8 @@ function RegisterFormPanel() {
   const [orgMode, setOrgMode] = useState<"join" | "create">(initialMode);
   const [organizationName, setOrganizationName] = useState(initialOrg);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(urlError);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -86,6 +91,44 @@ function RegisterFormPanel() {
       setError(err instanceof Error ? err.message : "Registration failed.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleRegister() {
+    setError(null);
+
+    if (orgMode === "create" && organizationName.trim().length < 2) {
+      setError("Please enter an organization name (at least 2 characters).");
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const newUserCallbackURL = buildHref("/api/auth/google-complete", {
+        role,
+        org: orgMode === "create" ? organizationName.trim() : undefined,
+        redirect: redirectTarget !== "/dashboard" ? redirectTarget : undefined,
+      });
+
+      const res = await signIn.social({
+        provider: "google",
+        callbackURL: redirectTarget,
+        newUserCallbackURL,
+        errorCallbackURL: buildHref("/register", {
+          error: "oauth_failed",
+          role,
+          mode: orgMode === "create" ? "create" : undefined,
+          redirect: redirectTarget !== "/dashboard" ? redirectTarget : undefined,
+        }),
+      });
+
+      if (res?.error) {
+        setError(res.error.message || "Unable to start Google sign-up.");
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-up failed.");
+      setGoogleLoading(false);
     }
   }
 
@@ -226,12 +269,25 @@ function RegisterFormPanel() {
         <Button
           type="submit"
           fullWidth
-          isDisabled={loading}
+          isDisabled={loading || googleLoading}
           className="mt-2 h-10 rounded-[8px] bg-ww-fg text-[14px] font-medium text-ww-bg"
         >
           {loading ? "Creating account…" : "Create account"}
         </Button>
       </form>
+
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-ww-hairline" />
+        <span className="text-[12px] text-ww-fg-muted">or sign up with</span>
+        <div className="h-px flex-1 bg-ww-hairline" />
+      </div>
+
+      <GoogleAuthButton
+        label="Continue with Google"
+        loading={googleLoading}
+        disabled={loading}
+        onClick={handleGoogleRegister}
+      />
 
       <p className="mt-6 text-center text-[13px] text-ww-fg-secondary">
         Already have an account?{" "}

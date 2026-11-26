@@ -9,7 +9,17 @@ import { signIn } from "@/lib/auth-client";
 import { useWattWise } from "@/components/providers/AppProviders";
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { buildHref, sanitizeRedirectPath } from "@/lib/url-params";
+
+function formatOAuthError(code: string | null): string | null {
+  if (!code) return null;
+  if (code === "access_denied") return "Google sign-in was cancelled.";
+  if (code === "oauth_session" || code === "oauth_setup") {
+    return "Could not complete Google account setup. Please try again.";
+  }
+  return "Google authentication failed. Please check your Google OAuth settings or try email sign-in.";
+}
 
 function LoginFormPanel() {
   const router = useRouter();
@@ -18,11 +28,13 @@ function LoginFormPanel() {
 
   const redirectTarget = sanitizeRedirectPath(searchParams.get("redirect"));
   const initialEmail = searchParams.get("email") || "";
+  const urlError = formatOAuthError(searchParams.get("error"));
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(urlError);
 
   async function handleCredentialLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -44,6 +56,28 @@ function LoginFormPanel() {
     }
   }
 
+  async function handleGoogleLogin() {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      const res = await signIn.social({
+        provider: "google",
+        callbackURL: redirectTarget,
+        errorCallbackURL: buildHref("/login", {
+          error: "oauth_failed",
+          redirect: redirectTarget !== "/dashboard" ? redirectTarget : undefined,
+        }),
+      });
+      if (res?.error) {
+        setError(res.error.message || "Unable to start Google sign-in.");
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed.");
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <div className="ww-panel flex flex-col justify-center p-6 sm:p-8 lg:col-span-5">
       <h1 className="text-[26px] font-medium tracking-[-0.02em] text-ww-fg">
@@ -60,7 +94,22 @@ function LoginFormPanel() {
         </div>
       )}
 
-      <form onSubmit={handleCredentialLogin} className="mt-6 space-y-4">
+      <div className="mt-6">
+        <GoogleAuthButton
+          label="Continue with Google"
+          loading={googleLoading}
+          disabled={loading}
+          onClick={handleGoogleLogin}
+        />
+
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-ww-hairline" />
+          <span className="text-[12px] text-ww-fg-muted">or with email</span>
+          <div className="h-px flex-1 bg-ww-hairline" />
+        </div>
+      </div>
+
+      <form onSubmit={handleCredentialLogin} className="space-y-4">
         <div>
           <label
             htmlFor="login-email"
@@ -101,7 +150,7 @@ function LoginFormPanel() {
         <Button
           type="submit"
           fullWidth
-          isDisabled={loading}
+          isDisabled={loading || googleLoading}
           className="mt-2 h-10 rounded-[8px] bg-ww-fg text-[14px] font-medium text-ww-bg"
         >
           {loading ? "Signing in…" : "Sign in"}
