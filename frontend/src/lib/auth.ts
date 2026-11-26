@@ -11,12 +11,41 @@ const googleClientSecret =
   process.env.GOOGLE_CLIENT_SECRET?.trim() ||
   process.env.Google_Client_secret?.trim();
 
+const vercelProdUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`
+  : undefined;
+const vercelPreviewUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL.trim()}`
+  : undefined;
+
+const baseUrl = (
+  process.env.BETTER_AUTH_URL?.trim() ||
+  vercelProdUrl ||
+  vercelPreviewUrl ||
+  "http://localhost:3000"
+).replace(/\/+$/, "");
+
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      baseUrl,
+      vercelProdUrl,
+      vercelPreviewUrl,
+      "https://wattwise-frontend*.vercel.app",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:3001",
+      "http://localhost:3010",
+    ].filter((v): v is string => Boolean(v))
+  )
+);
+
 export const auth = betterAuth({
   database: mongodbAdapter(db, {
     client: mongoClient,
   }),
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: (process.env.BETTER_AUTH_URL || "http://localhost:3000").trim(),
+  baseURL: baseUrl,
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
@@ -39,10 +68,5 @@ export const auth = betterAuth({
         },
       }
     : {}),
-  trustedOrigins: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://localhost:3010",
-  ],
+  trustedOrigins,
 });

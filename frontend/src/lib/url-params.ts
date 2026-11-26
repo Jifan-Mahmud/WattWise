@@ -109,10 +109,10 @@ export function formatOAuthError(
     return "Google sign-in was cancelled.";
   }
   if (code === "state_mismatch") {
-    return "Google sign-in session expired or mismatched. Open the app via http://localhost:3000 and try again.";
+    return "Google sign-in session expired or mismatched. Try again from the primary app URL.";
   }
   if (code === "invalid_code") {
-    return "Google authorization code check failed. Verify GOOGLE_CLIENT_SECRET and http://localhost:3000/api/auth/callback/google in Google Cloud Console.";
+    return "Google authorization code check failed. Verify GOOGLE_CLIENT_SECRET and the /api/auth/callback/google redirect URI in Google Cloud Console.";
   }
   if (code === "account_not_linked" || code === "unable_to_link_account") {
     return "Could not link this Google account to your existing email profile.";

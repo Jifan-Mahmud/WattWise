@@ -12,19 +12,42 @@ const insightsRoutes = require('./routes/insights');
 
 const app = express();
 
+const staticOrigins = new Set(
+  [
+    FRONTEND_URL,
+    ...(process.env.FRONTEND_URLS || '').split(',').map((u) => u.trim()),
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://localhost:3010',
+  ].filter(Boolean)
+);
+
 app.use(
   cors({
-    origin: [
-      FRONTEND_URL,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://localhost:3001',
-      'http://localhost:3010',
-    ],
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (
+        staticOrigins.has(origin) ||
+        /^https:\/\/wattwise-frontend[a-z0-9-]*\.vercel\.app$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );
 app.use(express.json({ limit: '1mb' }));
+
+// Public root status
+app.get('/', (req, res) => {
+  res.json({
+    ok: true,
+    service: 'wattwise-backend',
+    health: '/api/health',
+  });
+});
 
 // Public health check
 app.get('/api/health', async (req, res) => {
