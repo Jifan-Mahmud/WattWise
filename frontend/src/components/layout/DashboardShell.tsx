@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
@@ -78,16 +78,11 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+function AuthRedirectGuard() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, organization, theme, toggleTheme, loadingAuth, signOutUser } =
-    useWattWise();
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [cmdOpen, setCmdOpen] = useState(false);
-  const [cmdQuery, setCmdQuery] = useState("");
+  const { user, loadingAuth } = useWattWise();
 
   useEffect(() => {
     if (!loadingAuth && !user) {
@@ -96,6 +91,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       router.replace(buildHref("/login", { redirect: target }));
     }
   }, [loadingAuth, user, pathname, searchParams, router]);
+
+  return null;
+}
+
+export function DashboardShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, organization, theme, toggleTheme, loadingAuth, signOutUser } =
+    useWattWise();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [cmdQuery, setCmdQuery] = useState("");
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -134,16 +142,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     return "Workspace";
   }, [pathname]);
 
-  if (loadingAuth || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-ww-bg text-ww-fg-secondary">
-        <div className="flex items-center gap-3 text-[14px]">
-          <WattWiseMark size={20} />
-          <span>Loading telemetry workspace…</span>
-        </div>
-      </div>
-    );
-  }
+  const showAuthOverlay = loadingAuth || !user;
 
   const renderSidebar = (idSuffix: string) => (
     <div className="flex h-full flex-col bg-ww-sidebar px-4 py-4">
@@ -232,9 +231,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between gap-2 px-1">
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium text-ww-fg">
-              {user.name}
+              {user?.name || "Operator"}
             </p>
-            <p className="truncate text-[12px] text-ww-fg-muted">{user.role}</p>
+            <p className="truncate text-[12px] text-ww-fg-muted">
+              {user?.role || "Workspace"}
+            </p>
           </div>
           <motion.button
             type="button"
@@ -255,6 +256,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-ww-bg text-ww-fg">
+      <Suspense fallback={null}>
+        <AuthRedirectGuard />
+      </Suspense>
+
+      {showAuthOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ww-bg text-ww-fg-secondary">
+          <div className="flex items-center gap-3 text-[14px]">
+            <WattWiseMark size={20} />
+            <span>Loading telemetry workspace…</span>
+          </div>
+        </div>
+      )}
+
       <aside className="hidden w-[260px] shrink-0 border-r border-ww-hairline lg:block">
         <div className="sticky top-0 h-screen">{renderSidebar("desktop")}</div>
       </aside>
@@ -312,7 +326,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {user.role === "Viewer" && (
+            {user?.role === "Viewer" && (
               <StatusBadge label="Read-only" tone="neutral" />
             )}
             <ShareLinkButton />

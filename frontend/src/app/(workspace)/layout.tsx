@@ -1,17 +1,6 @@
 import React, { Suspense } from "react";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { WattWiseMark } from "@/components/ui/MotionPrimitives";
-
-function WorkspaceLoadingFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-ww-bg text-ww-fg-secondary">
-      <div className="flex items-center gap-3 text-[14px]">
-        <WattWiseMark size={20} />
-        <span>Loading telemetry workspace…</span>
-      </div>
-    </div>
-  );
-}
+import { LoadingPanel } from "@/components/ui/DataState";
 
 export default function WorkspaceLayout({
   children,
@@ -19,8 +8,8 @@ export default function WorkspaceLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense fallback={<WorkspaceLoadingFallback />}>
-      <DashboardShell>{children}</DashboardShell>
-    </Suspense>
+    <DashboardShell>
+      <Suspense fallback={<LoadingPanel rows={8} />}>{children}</Suspense>
+    </DashboardShell>
   );
 }
