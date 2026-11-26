@@ -10,6 +10,7 @@ import { useWattWise, type UserRole } from "@/components/providers/AppProviders"
 import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 import {
   buildHref,
   formatOAuthError,
@@ -197,15 +198,11 @@ function RegisterFormPanel() {
           >
             Password
           </label>
-          <input
+          <PasswordInput
             id="reg-password"
-            type="password"
-            required
-            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Minimum 8 characters"
-            className="mt-1.5 h-10 w-full rounded-[8px] border border-ww-hairline-strong bg-ww-bg px-3 text-[14px] text-ww-fg outline-none transition-colors focus:border-ww-accent"
+            autoComplete="new-password"
           />
         </div>
 
