@@ -56,6 +56,7 @@ const DEFAULT_ALERT_FILTERS = {
   tab: "alerts",
   status: "all",
   severity: "all",
+  buildingId: "all",
 };
 
 export default function AlertsPage() {
@@ -69,6 +70,7 @@ export default function AlertsPage() {
     filters.tab === "thresholds" ? "thresholds" : "alerts";
   const statusFilter = filters.status;
   const severityFilter = filters.severity;
+  const buildingFilter = filters.buildingId;
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [summary, setSummary] = useState({ New: 0, Acknowledged: 0, Resolved: 0 });
   const [thresholds, setThresholds] = useState<ThresholdItem[]>([]);
@@ -95,6 +97,7 @@ export default function AlertsPage() {
     const alertsUrl = buildApiUrl("/api/alerts", {
       status: statusFilter,
       severity: severityFilter,
+      buildingId: buildingFilter,
     });
 
     Promise.all([
@@ -123,7 +126,7 @@ export default function AlertsPage() {
     return () => {
       active = false;
     };
-  }, [apiFetch, statusFilter, severityFilter, refreshTick]);
+  }, [apiFetch, statusFilter, severityFilter, buildingFilter, refreshTick]);
 
   async function handleStatusChange(
     id: string,
@@ -279,7 +282,21 @@ export default function AlertsPage() {
               <StatusBadge label={`${summary.Resolved} Resolved`} tone="positive" />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                aria-label="Filter alert building"
+                value={buildingFilter}
+                onChange={(e) => setFilter("buildingId", e.target.value)}
+                className="h-9 rounded-[8px] border border-ww-hairline bg-ww-card px-3 text-[13px] text-ww-fg outline-none focus:border-ww-accent"
+              >
+                <option value="all">All buildings</option>
+                {buildings.map((b) => (
+                  <option key={b._id} value={b._id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+
               <select
                 aria-label="Filter alert status"
                 value={statusFilter}

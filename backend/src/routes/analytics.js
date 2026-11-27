@@ -284,14 +284,32 @@ router.get('/analytics', async (req, res, next) => {
         .aggregate([
           { $match: matchQuarter },
           {
-            $group: {
-              _id: { $dateToString: { format: '%Y-%m', date: '$timestamp' } },
-              totalKwh: { $sum: '$consumptionKwh' },
-              totalCost: { $sum: '$estimatedCost' },
-              carbonKg: { $sum: '$carbonKg' },
+            $facet: {
+              monthly: [
+                {
+                  $group: {
+                    _id: { $dateToString: { format: '%Y-%m', date: '$timestamp' } },
+                    totalKwh: { $sum: '$consumptionKwh' },
+                    totalCost: { $sum: '$estimatedCost' },
+                    carbonKg: { $sum: '$carbonKg' },
+                  },
+                },
+                { $sort: { _id: 1 } },
+              ],
+              weekly: [
+                {
+                  $group: {
+                    _id: { $dateToString: { format: '%G-W%V', date: '$timestamp' } },
+                    weekStart: { $min: '$timestamp' },
+                    totalKwh: { $sum: '$consumptionKwh' },
+                    totalCost: { $sum: '$estimatedCost' },
+                    carbonKg: { $sum: '$carbonKg' },
+                  },
+                },
+                { $sort: { _id: 1 } },
+              ],
             },
           },
-          { $sort: { _id: 1 } },
         ])
         .toArray(),
       db.collection('meters').find(scopeFilter(req)).toArray(),
@@ -357,12 +375,29 @@ router.get('/analytics', async (req, res, next) => {
         totalKwh: Number(h.totalKwh.toFixed(1)),
       })),
       dailyUsage,
-      monthlyUsage: monthlyAgg.map((m) => ({
+      monthlyUsage: (monthlyAgg[0]?.monthly || []).map((m) => ({
         month: m._id,
         kwh: Number(m.totalKwh.toFixed(1)),
         cost: Number(m.totalCost.toFixed(2)),
         carbonKg: Number(m.carbonKg.toFixed(1)),
       })),
+      weeklyUsage: (monthlyAgg[0]?.weekly || []).map((w) => {
+        const shortWeek = String(w._id).split('-')[1] || w._id;
+        const startLabel = w.weekStart
+          ? new Date(w.weekStart).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              timeZone: 'UTC',
+            })
+          : '';
+        return {
+          week: w._id,
+          label: startLabel ? `${shortWeek} (${startLabel})` : w._id,
+          kwh: Number(w.totalKwh.toFixed(1)),
+          cost: Number(w.totalCost.toFixed(2)),
+          carbonKg: Number(w.carbonKg.toFixed(1)),
+        };
+      }),
       buildingComparison: (facet.byBuilding || []).map((b) => {
         const meta = buildingMeta.get(String(b._id));
         const sqFt = meta?.totalSqFt || 250000;

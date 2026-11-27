@@ -23,6 +23,13 @@ import { buildApiUrl } from "@/lib/url-params";
 interface AnalyticsPayload {
   hourlyUsage: Array<{ hour: string; avgKwh: number; peakKwh: number }>;
   dailyUsage: Array<{ date: string; label: string; kwh: number; cost: number }>;
+  weeklyUsage?: Array<{
+    week: string;
+    label: string;
+    kwh: number;
+    cost: number;
+    carbonKg: number;
+  }>;
   monthlyUsage: Array<{ month: string; kwh: number; cost: number; carbonKg: number }>;
   buildingComparison: Array<{
     id: string;
@@ -283,6 +290,57 @@ export default function AnalyticsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+              </div>
+            </div>
+
+            {/* Row 1.5: Weekly Consumption */}
+            <div className="ww-card p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                  <h2 className="text-[16px] font-medium text-ww-fg">
+                    Weekly consumption
+                  </h2>
+                  <p className="text-[13px] text-ww-fg-secondary">
+                    ISO week-by-week electricity usage (kWh) across the quarter
+                  </p>
+                </div>
+                <span className="font-mono text-[12px] text-ww-fg-muted">
+                  {(data.weeklyUsage ?? []).length} weeks
+                </span>
+              </div>
+              <div className="mt-5 h-[240px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data.weeklyUsage ?? []}
+                    margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      vertical={false}
+                      stroke="var(--ww-hairline)"
+                      strokeDasharray="3 3"
+                    />
+                    <XAxis
+                      dataKey="label"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--ww-fg-muted)", fontSize: 11 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--ww-fg-muted)", fontSize: 11 }}
+                      tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip content={<SimpleTooltip />} />
+                    <Bar
+                      name="Weekly kWh"
+                      dataKey="kwh"
+                      fill="var(--ww-accent)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={42}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
 

@@ -11,6 +11,7 @@ import { PageEntrance, WattWiseMark } from "@/components/ui/MotionPrimitives";
 import { AuthVisualShowcase } from "@/components/auth/AuthVisualShowcase";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-accounts";
 import {
   buildHref,
   formatOAuthError,
@@ -162,6 +163,52 @@ function LoginFormPanel() {
           Register
         </Link>
       </p>
+
+      <div className="mt-6 border-t border-ww-hairline pt-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="text-[12px] font-medium text-ww-fg-secondary">
+            Demo credentials (all 4 roles)
+          </span>
+          <code className="rounded bg-ww-bg-subtle px-2 py-0.5 font-mono text-[11px] text-ww-fg">
+            {DEMO_PASSWORD}
+          </code>
+        </div>
+        <div className="space-y-1.5">
+          {DEMO_ACCOUNTS.map((acct) => {
+            const isSelected = email === acct.email;
+            return (
+              <div
+                key={acct.email}
+                className="flex items-center justify-between gap-3 rounded-[8px] border border-ww-hairline bg-ww-bg-subtle/60 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[12px] font-medium text-ww-fg">
+                    {acct.role}
+                  </p>
+                  <p className="truncate font-mono text-[11px] text-ww-fg-muted">
+                    {acct.email}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(acct.email);
+                    setPassword(DEMO_PASSWORD);
+                    setError(null);
+                  }}
+                  className={`shrink-0 whitespace-nowrap rounded-[6px] border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    isSelected
+                      ? "border-ww-accent bg-ww-accent-soft text-ww-accent"
+                      : "border-ww-hairline bg-ww-card text-ww-fg hover:border-ww-hairline-strong"
+                  }`}
+                >
+                  {isSelected ? "Filled" : "Use"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
