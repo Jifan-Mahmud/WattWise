@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { ObjectId } from "mongodb";
 import { signJWT } from "better-auth/crypto";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { getWattwiseDb } from "@/lib/mongodb";
 import { provisionWattwiseProfile } from "@/lib/profile-provisioning";
 
 export async function GET() {
   try {
+    const auth = await getAuth();
     const session = await auth.api.getSession({
       headers: await headers(),
     });
@@ -89,6 +90,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const auth = await getAuth();
     const session = await auth.api.getSession({
       headers: await headers(),
     });

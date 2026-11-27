@@ -2,26 +2,46 @@ const { MongoClient } = require('mongodb');
 const { MONGODB_URI, DB_NAME } = require('./env');
 
 let client = null;
+let connectPromise = null;
 let db = null;
 let indexesInitialized = false;
+
+function resetConnectionState() {
+  client = null;
+  connectPromise = null;
+  db = null;
+  indexesInitialized = false;
+}
 
 /**
  * Connect to MongoDB using a single pooled client and initialize required indexes.
  */
 async function connectDb() {
-  if (db && indexesInitialized) {
+  if (client?.topology?.isDestroyed?.()) {
+    resetConnectionState();
+  }
+
+  if (db && indexesInitialized && client) {
     return { client, db };
   }
 
   if (!client) {
     client = new MongoClient(MONGODB_URI, {
-      maxPoolSize: 20,
-      minPoolSize: 2,
-      serverSelectionTimeoutMS: 10000,
+      maxPoolSize: 15,
+      minPoolSize: 0,
+      maxIdleTimeMS: 10000,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 10000,
     });
-    await client.connect();
+    client.on('topologyClosed', resetConnectionState);
+    client.on('close', resetConnectionState);
+    connectPromise = client.connect().catch((err) => {
+      resetConnectionState();
+      throw err;
+    });
   }
 
+  await connectPromise;
   db = client.db(DB_NAME);
 
   if (!indexesInitialized) {

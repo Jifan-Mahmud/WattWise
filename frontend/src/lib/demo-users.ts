@@ -1,4 +1,4 @@
-import { auth } from "./auth";
+import { getAuth } from "./auth";
 import { getWattwiseDb } from "./mongodb";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "./demo-accounts";
 
@@ -8,6 +8,7 @@ let bootstrapped = false;
 
 export async function ensureDemoAuthUsers() {
   if (bootstrapped) return;
+  const auth = await getAuth();
   const db = await getWattwiseDb();
 
   for (const acct of DEMO_ACCOUNTS) {

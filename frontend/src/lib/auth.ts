@@ -1,8 +1,7 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
-import { mongoClient } from "./mongodb";
-
-const db = mongoClient.db(process.env.MONGODB_DB_NAME || "wattwise");
+import type { Db, MongoClient } from "mongodb";
+import { getConnectedMongoClient } from "./mongodb";
 
 const googleClientId =
   process.env.GOOGLE_CLIENT_ID?.trim() ||
@@ -40,33 +39,72 @@ const trustedOrigins = Array.from(
   )
 );
 
-export const auth = betterAuth({
-  database: mongodbAdapter(db, {
-    client: mongoClient,
-  }),
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: baseUrl,
-  emailAndPassword: {
-    enabled: true,
-    autoSignIn: true,
-    minPasswordLength: 8,
-  },
-  account: {
-    accountLinking: {
+function createBetterAuth(db: Db, client: MongoClient) {
+  return betterAuth({
+    database: mongodbAdapter(db, {
+      client,
+    }),
+    secret: process.env.BETTER_AUTH_SECRET,
+    baseURL: baseUrl,
+    emailAndPassword: {
       enabled: true,
-      trustedProviders: ["google"],
-      requireLocalEmailVerified: false,
+      autoSignIn: true,
+      minPasswordLength: 8,
     },
-  },
-  ...(googleClientId && googleClientSecret
-    ? {
-        socialProviders: {
-          google: {
-            clientId: googleClientId,
-            clientSecret: googleClientSecret,
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["google"],
+        requireLocalEmailVerified: false,
+      },
+    },
+    ...(googleClientId && googleClientSecret
+      ? {
+          socialProviders: {
+            google: {
+              clientId: googleClientId,
+              clientSecret: googleClientSecret,
+            },
           },
-        },
-      }
-    : {}),
-  trustedOrigins,
-});
+        }
+      : {}),
+    trustedOrigins,
+  });
+}
+
+type AuthInstance = ReturnType<typeof createBetterAuth>;
+
+const globalForAuth = globalThis as unknown as {
+  _betterAuthClient?: MongoClient;
+  _betterAuthInstance?: AuthInstance;
+  _betterAuthInitPromise?: Promise<AuthInstance>;
+};
+
+/**
+ * Return a Better Auth instance bound to an active, healthy MongoClient.
+ * Re-creates the adapter cleanly if Vercel serverless froze and closed a prior topology.
+ */
+export async function getAuth(): Promise<AuthInstance> {
+  const client = await getConnectedMongoClient();
+
+  if (
+    globalForAuth._betterAuthInstance &&
+    globalForAuth._betterAuthClient === client
+  ) {
+    return globalForAuth._betterAuthInstance;
+  }
+
+  if (!globalForAuth._betterAuthInitPromise) {
+    globalForAuth._betterAuthInitPromise = (async () => {
+      const db = client.db(process.env.MONGODB_DB_NAME || "wattwise");
+      const instance = createBetterAuth(db, client);
+      globalForAuth._betterAuthClient = client;
+      globalForAuth._betterAuthInstance = instance;
+      return instance;
+    })().finally(() => {
+      globalForAuth._betterAuthInitPromise = undefined;
+    });
+  }
+
+  return globalForAuth._betterAuthInitPromise;
+}

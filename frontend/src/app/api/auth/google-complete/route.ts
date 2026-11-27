@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { getWattwiseDb } from "@/lib/mongodb";
 import { provisionWattwiseProfile } from "@/lib/profile-provisioning";
 import { sanitizeRedirectPath } from "@/lib/url-params";
@@ -14,6 +14,7 @@ export async function GET(req: Request) {
   const target = sanitizeRedirectPath(url.searchParams.get("redirect"));
 
   try {
+    const auth = await getAuth();
     const session = await auth.api.getSession({
       headers: await headers(),
     });
