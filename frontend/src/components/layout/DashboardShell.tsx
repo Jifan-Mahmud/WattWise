@@ -329,6 +329,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             {user?.role === "Viewer" && (
               <StatusBadge label="Read-only" tone="neutral" />
             )}
+            {user?.requestStatus === "Pending" && user?.requestedRole && (
+              <StatusBadge label={`Pending: ${user.requestedRole}`} tone="warning" />
+            )}
             <ShareLinkButton />
             <motion.button
               type="button"

@@ -46,9 +46,10 @@ Hosted by Next.js (`frontend/src/app/api/auth/*`):
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | `GET`, `POST` | `/api/auth/[...all]` | Public | Better Auth core handler (sign-in, sign-up, Google OAuth callback, session, sign-out) |
+| `GET` | `/api/auth/organizations` | Public | Search existing organizations by `?q=` (returns safe public `{ id, name, slug, industry }` only) |
 | `GET` | `/api/auth/token` | Session Cookie | Auto-provisions missing `wattwise_profiles` row (default `Viewer`) and mints 12h API JWT + returns `user` & `organization` |
-| `POST` | `/api/auth/token` | Session Cookie | Initializes profile with `{ name, role, organizationId, organizationName }` after registration |
-| `GET` | `/api/auth/google-complete` | Session Cookie | Provisions chosen `role` & `org` after Google OAuth sign-up and redirects to workspace |
+| `POST` | `/api/auth/token` | Session Cookie | Provisions profile after registration (`mode: "join" \| "create"`, `organizationId`, `organizationName`, `requestedRole`). Joining any existing org locks `role: "Viewer"` and submits optional `Facility Manager` / `Department Manager` requests to Org Admin; creating a new org assigns `Organization Admin`. |
+| `GET` | `/api/auth/google-complete` | Session Cookie | Provisions Google OAuth registration (`mode`, `orgId`, `org`, `requestedRole`) with identical Viewer-join / Admin-create enforcement |
 | `POST` | `/api/auth/demo-bootstrap` | Public | Idempotently ensures the 4 seeded demo credential accounts exist in Better Auth |
 
 ---
@@ -84,7 +85,7 @@ Analytics, dashboard, energy-record, and report endpoints share `parseDateRange`
 - **Response:** `{ organization }`
 
 ### `GET /api/organizations/portfolio`
-- **Roles:** All authenticated roles
+- **Roles:** All authenticated roles (returns organizations accessible to user's portfolio / ownership)
 - **Response:** `{ organizations: Array<Org & { isCurrent, buildingsCount, metersCount }> }`
 
 ### `POST /api/organizations`
@@ -93,7 +94,7 @@ Analytics, dashboard, energy-record, and report endpoints share `parseDateRange`
 - **Response (`201`):** `{ organization }`
 
 ### `POST /api/organizations/switch`
-- **Roles:** `Organization Admin`
+- **Roles:** `Organization Admin` (strictly scoped to owned/portfolio organizations; returns `403` otherwise)
 - **Body:** `{ organizationId }`
 - **Response:** `{ ok: true, organization }` (updates active `organizationId` on user profile)
 
@@ -219,7 +220,7 @@ Analytics, dashboard, energy-record, and report endpoints share `parseDateRange`
 | `GET` | `/api/reports/scheduled` | All roles | — | `{ schedules }` |
 | `POST` | `/api/reports/scheduled` | `Organization Admin`, `Facility Manager` | `{ name, frequency, format, recipients, buildingId?, enabled? }` | `201 { schedule }` |
 | `DELETE` | `/api/reports/scheduled/:id` | `Organization Admin`, `Facility Manager` | — | `{ ok: true }` |
-| `GET` | `/api/users` | `Organization Admin` | — | `{ users }` (enriched with `departmentNames`) |
-| `PATCH` | `/api/users/:id` | `Organization Admin` | `{ role, departmentIds, status }` | `{ user }` |
+| `GET` | `/api/users` | `Organization Admin` | — | `{ users }` (sorted with pending role requests first, enriched with `departmentNames`) |
+| `PATCH` | `/api/users/:id` | `Organization Admin` | `{ role, departmentIds, status, requestAction?: 'approve' \| 'dismiss' }` | `{ user }` (approves/dismisses pending role requests & assigns roles/departments) |
 | `GET` | `/api/profile` | All roles | — | `{ profile, organization }` |
 | `PATCH` | `/api/profile` | All roles (including `Viewer`) | `{ name?, themePreference?, timezone? }` | `{ profile }` |

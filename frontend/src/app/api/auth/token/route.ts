@@ -22,7 +22,6 @@ export async function GET() {
       db,
       email: session.user.email,
       name: session.user.name,
-      defaultRole: "Viewer",
     });
 
     if (profile.status === "Suspended") {
@@ -61,6 +60,8 @@ export async function GET() {
         email: profile.email,
         name: profile.name,
         role: profile.role,
+        requestedRole: profile.requestedRole || null,
+        requestStatus: profile.requestStatus || null,
         organizationId: String(profile.organizationId),
         departmentIds,
         themePreference: profile.themePreference || "dark",
@@ -106,13 +107,20 @@ export async function POST(req: Request) {
       db,
       email: session.user.email,
       name: body.name || session.user.name,
-      role: body.role,
+      mode: body.mode,
+      requestedRole: body.requestedRole || body.role,
       organizationId: body.organizationId,
       organizationName: body.organizationName,
-      defaultRole: "Organization Admin",
     });
 
-    return NextResponse.json({ ok: true, profileId: String(profile._id) });
+    return NextResponse.json({
+      ok: true,
+      profileId: String(profile._id),
+      role: profile.role,
+      requestedRole: profile.requestedRole || null,
+      requestStatus: profile.requestStatus || null,
+      organizationId: String(profile.organizationId),
+    });
   } catch (err) {
     console.error("Profile registration error:", err);
     return NextResponse.json(

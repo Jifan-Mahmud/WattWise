@@ -28,9 +28,11 @@ export async function GET(req: Request) {
       db,
       email: session.user.email,
       name: session.user.name,
-      role: url.searchParams.get("role"),
+      mode: url.searchParams.get("mode"),
+      requestedRole:
+        url.searchParams.get("requestedRole") || url.searchParams.get("role"),
+      organizationId: url.searchParams.get("orgId"),
       organizationName: url.searchParams.get("org"),
-      defaultRole: "Organization Admin",
     });
 
     return NextResponse.redirect(new URL(target, req.url));

@@ -304,10 +304,16 @@ router.get('/users', requireRole('Organization Admin'), async (req, res, next) =
     ]);
 
     const deptMap = new Map(departments.map((d) => [String(d._id), d.name]));
-    const items = users.map((u) => ({
-      ...u,
-      departmentNames: (u.departmentIds || []).map((id) => deptMap.get(String(id)) || String(id)),
-    }));
+    const items = users
+      .map((u) => ({
+        ...u,
+        departmentNames: (u.departmentIds || []).map((id) => deptMap.get(String(id)) || String(id)),
+      }))
+      .sort((a, b) => {
+        const aPending = a.requestStatus === 'Pending' ? 0 : 1;
+        const bPending = b.requestStatus === 'Pending' ? 0 : 1;
+        return aPending - bPending;
+      });
 
     res.json({ users: items });
   } catch (err) {
@@ -324,26 +330,39 @@ router.patch('/users/:id', requireRole('Organization Admin'), async (req, res, n
     }
 
     const db = await getDb();
+    const existing = await db
+      .collection('wattwise_profiles')
+      .findOne({ _id: id, organizationId: req.user.organizationId });
+
+    if (!existing) return res.status(404).json({ error: 'User profile not found' });
+
     const deptIds = parsed.data.departmentIds
       .filter((d) => ObjectId.isValid(d))
       .map((d) => new ObjectId(d));
+
+    const setUpdate = {
+      role: parsed.data.role,
+      departmentIds: parsed.data.role === 'Department Manager' ? deptIds : [],
+      status: parsed.data.status,
+      updatedAt: new Date(),
+    };
+
+    if (existing.requestStatus === 'Pending' || parsed.data.requestAction) {
+      setUpdate.requestedRole = null;
+      setUpdate.requestStatus =
+        parsed.data.requestAction === 'dismiss' ? 'Dismissed' : 'Approved';
+      setUpdate.reviewedBy = req.user.email;
+      setUpdate.reviewedAt = new Date();
+    }
 
     const updated = await db
       .collection('wattwise_profiles')
       .findOneAndUpdate(
         { _id: id, organizationId: req.user.organizationId },
-        {
-          $set: {
-            role: parsed.data.role,
-            departmentIds: deptIds,
-            status: parsed.data.status,
-            updatedAt: new Date(),
-          },
-        },
+        { $set: setUpdate },
         { returnDocument: 'after' }
       );
 
-    if (!updated) return res.status(404).json({ error: 'User profile not found' });
     res.json({ user: updated });
   } catch (err) {
     next(err);

@@ -24,6 +24,8 @@ export interface WattWiseUser {
   email: string;
   name: string;
   role: UserRole;
+  requestedRole?: UserRole | null;
+  requestStatus?: "Pending" | "Approved" | "Dismissed" | null;
   organizationId: string;
   departmentIds: string[];
   themePreference: "dark" | "light";

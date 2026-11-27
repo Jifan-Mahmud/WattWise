@@ -61,6 +61,7 @@ Stores multi-tenant organization metadata, default electricity tariffs, and carb
 | `tariffPerKwh` | `number` | Positive, `<= 10`, default `0.145` | Default tariff rate ($/kWh) |
 | `emissionFactorKgPerKwh` | `number` | Positive, `<= 5`, default `0.412` | CO2e factor (kg CO2e/kWh) |
 | `contactEmail` | `string` | Optional valid email | Organization operations contact |
+| `ownerEmail` | `string` | Creator email | Admin owner authorized for multi-org switching |
 | `createdAt` | `Date` | Auto timestamp | Creation time |
 | `updatedAt` | `Date` | Auto timestamp | Last modification time |
 
@@ -276,7 +277,12 @@ Bridges authenticated Better Auth accounts (by `email`) to organization tenancy,
 | `email` | `string` | Unique index | Matches authenticated user email |
 | `name` | `string` | Min 2 chars | Display name |
 | `organizationId` | `ObjectId` | Ref `organizations._id` | Active organization tenancy |
-| `role` | `string` | Enum `Organization Admin`, `Facility Manager`, `Department Manager`, `Viewer` | RBAC role |
+| `role` | `string` | Enum `Organization Admin`, `Facility Manager`, `Department Manager`, `Viewer` | Active RBAC role |
+| `requestedRole` | `string \| null` | `Facility Manager` \| `Department Manager` \| `null` | Pending role upgrade requested during join |
+| `requestStatus` | `string \| null` | `Pending` \| `Approved` \| `Dismissed` \| `null` | Admin review status for requested role |
+| `requestedAt` | `Date \| null` | Optional timestamp | When elevated role was requested |
+| `reviewedBy` | `string \| null` | Optional Admin email | Admin who approved/dismissed the request |
+| `reviewedAt` | `Date \| null` | Optional timestamp | Decision timestamp |
 | `departmentIds` | `ObjectId[]` | Default `[]` | Authorized departments (for `Department Manager`) |
 | `themePreference` | `string` | `dark` \| `light` | Saved UI theme |
 | `timezone` | `string` | e.g. `America/New_York`, `UTC` | User timezone preference |

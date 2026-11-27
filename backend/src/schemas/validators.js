@@ -85,6 +85,7 @@ const userRoleUpdateSchema = z.object({
   role: z.enum(ROLES),
   departmentIds: z.array(z.string()).default([]),
   status: z.enum(['Active', 'Suspended']).default('Active'),
+  requestAction: z.enum(['approve', 'dismiss']).optional(),
 });
 
 const scheduledReportSchema = z.object({

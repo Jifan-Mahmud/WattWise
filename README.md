@@ -45,7 +45,7 @@ All seeded demo operators belong to **Northgrid Commercial Holdings** and share 
 - **Alert & Threshold System (`/alerts`):** Configurable rules (`hourly_kwh`, `daily_kwh`, `spike_ratio`), automatic threshold evaluation on reading ingestion/simulation, lifecycle triage (`New` -> `Acknowledged` -> `Resolved`), and filters by status, severity, and **building**.
 - **Energy Insights (`/insights`):** High-consumption anomaly detection, peak hours ranking, highest-consuming buildings/departments, period-over-period comparisons, carbon & tree-equivalent metrics, and actionable saving recommendations (`Open` / `Accepted` / `Dismissed`).
 - **Reporting & Exports (`/reports`):** Streaming formula-safe CSV export (`GET /api/energy-records/export`, up to 50,000 rows), printable browser PDF report view, and recurring **Scheduled Reports** management.
-- **Role-Based Access & Profile Settings (`/users`, `/settings`):** Organization Admin role & department assignment management, and dark/light theme + timezone preferences for all roles.
+- **Role-Based Access, Self-Service Onboarding & Approvals (`/register`, `/users`, `/settings`):** Users joining an existing organization search organizations during registration and always start as read-only `Viewer` (with optional `Facility Manager` or `Department Manager` requests queued for the Organization Admin in `/users`), while creating a new organization grants `Organization Admin` strictly for that new workspace. Dark/light theme and timezone preferences work for all roles.
 
 ---
 

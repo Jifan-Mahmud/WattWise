@@ -169,7 +169,7 @@ function LoginFormPanel() {
           <span className="text-[12px] font-medium text-ww-fg-secondary">
             Demo credentials (all 4 roles)
           </span>
-          <code className="rounded bg-ww-bg-subtle px-2 py-0.5 font-mono text-[11px] text-ww-fg">
+          <code className="rounded bg-ww-raised px-2 py-0.5 font-mono text-[11px] text-ww-fg">
             {DEMO_PASSWORD}
           </code>
         </div>
@@ -179,7 +179,7 @@ function LoginFormPanel() {
             return (
               <div
                 key={acct.email}
-                className="flex items-center justify-between gap-3 rounded-[8px] border border-ww-hairline bg-ww-bg-subtle/60 px-3 py-2"
+                className="flex items-center justify-between gap-3 rounded-[8px] border border-ww-hairline bg-ww-raised/60 px-3 py-2"
               >
                 <div className="min-w-0">
                   <p className="truncate text-[12px] font-medium text-ww-fg">

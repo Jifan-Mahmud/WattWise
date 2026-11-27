@@ -56,10 +56,32 @@ router.patch('/organizations/current', requireRole('Organization Admin'), async 
   }
 });
 
+const SEEDED_PORTFOLIO_SLUGS = [
+  'northgrid-commercial',
+  'apex-semiconductor',
+  'metro-university',
+];
+
+function accessibleOrgFilter(req) {
+  const clauses = [
+    { _id: req.user.organizationId },
+    { ownerEmail: req.user.email },
+    { contactEmail: req.user.email },
+  ];
+  if (req.user.email === 'admin@wattwise.io') {
+    clauses.push({ slug: { $in: SEEDED_PORTFOLIO_SLUGS } });
+  }
+  return { $or: clauses };
+}
+
 router.get('/organizations/portfolio', async (req, res, next) => {
   try {
     const db = await getDb();
-    const orgs = await db.collection('organizations').find({}).sort({ name: 1 }).toArray();
+    const orgs = await db
+      .collection('organizations')
+      .find(accessibleOrgFilter(req))
+      .sort({ name: 1 })
+      .toArray();
     const enriched = await Promise.all(
       orgs.map(async (org) => {
         const [buildings, meters] = await Promise.all([
@@ -91,6 +113,7 @@ router.post('/organizations', requireRole('Organization Admin'), async (req, res
     const doc = {
       _id: new ObjectId(),
       ...parsed.data,
+      ownerEmail: req.user.email,
       slug,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -108,6 +131,13 @@ router.post('/organizations/switch', requireRole('Organization Admin'), async (r
     const db = await getDb();
     const org = await db.collection('organizations').findOne({ _id: orgId });
     if (!org) return res.status(404).json({ error: 'Organization not found' });
+
+    const allowed = await db
+      .collection('organizations')
+      .findOne({ _id: orgId, ...accessibleOrgFilter(req) });
+    if (!allowed) {
+      return res.status(403).json({ error: 'Forbidden: organization switch outside your portfolio' });
+    }
 
     await db
       .collection('wattwise_profiles')

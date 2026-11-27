@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Pencil } from "@gravity-ui/icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { Check, Pencil, Xmark } from "@gravity-ui/icons";
 import { Button } from "@heroui/react";
 import { useWattWise, type UserRole } from "@/components/providers/AppProviders";
 import { PageEntrance } from "@/components/ui/MotionPrimitives";
@@ -17,6 +17,8 @@ interface OrgUser {
   name: string;
   email: string;
   role: UserRole;
+  requestedRole?: UserRole | null;
+  requestStatus?: "Pending" | "Approved" | "Dismissed" | null;
   departmentIds: string[];
   departmentNames: string[];
   status: "Active" | "Suspended";
@@ -75,9 +77,14 @@ export default function UsersPage() {
     };
   }, [apiFetch, isAdmin, refreshTick]);
 
-  function openEdit(target: OrgUser) {
+  const pendingRequests = useMemo(
+    () => users.filter((u) => u.requestStatus === "Pending" && u.requestedRole),
+    [users]
+  );
+
+  function openEdit(target: OrgUser, preselectRole?: UserRole) {
     setEditing(target);
-    setEditRole(target.role);
+    setEditRole(preselectRole || target.role);
     setEditStatus(target.status);
     setEditDepts(target.departmentIds.map(String));
   }
@@ -86,6 +93,46 @@ export default function UsersPage() {
     setEditDepts((prev) =>
       prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
     );
+  }
+
+  async function handleQuickRequestAction(
+    target: OrgUser,
+    action: "approve" | "dismiss"
+  ) {
+    if (
+      action === "approve" &&
+      target.requestedRole === "Department Manager" &&
+      departments.length > 0
+    ) {
+      openEdit(target, "Department Manager");
+      return;
+    }
+
+    const nextRole =
+      action === "approve" && target.requestedRole
+        ? target.requestedRole
+        : target.role;
+
+    try {
+      await apiFetch(`/api/users/${target._id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          role: nextRole,
+          status: target.status,
+          departmentIds: [],
+          requestAction: action,
+        }),
+      });
+      notify(
+        action === "approve"
+          ? `${target.name} promoted to ${nextRole}`
+          : `Kept ${target.name} as ${target.role}`,
+        "positive"
+      );
+      setRefreshTick((t) => t + 1);
+    } catch (err) {
+      notify(err instanceof Error ? err.message : "Action failed", "negative");
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -99,6 +146,12 @@ export default function UsersPage() {
           role: editRole,
           status: editStatus,
           departmentIds: editRole === "Department Manager" ? editDepts : [],
+          requestAction:
+            editing.requestStatus === "Pending"
+              ? editRole === "Viewer"
+                ? "dismiss"
+                : "approve"
+              : undefined,
         }),
       });
       notify(`Updated ${editing.name}`, "positive");
@@ -126,9 +179,25 @@ export default function UsersPage() {
           Users and permissions
         </h1>
         <p className="mt-1 text-[14px] text-ww-fg-secondary">
-          Manage organization team members, RBAC roles, and department scopes
+          Review pending role requests, assign organization RBAC roles, and scope
+          departments
         </p>
       </div>
+
+      {pendingRequests.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-ww-warning/40 bg-ww-warning-soft/50 px-4 py-3 text-[13px] text-ww-fg">
+          <div>
+            <span className="font-medium">
+              {pendingRequests.length} pending role request
+              {pendingRequests.length > 1 ? "s" : ""}
+            </span>{" "}
+            <span className="text-ww-fg-secondary">
+              — new members joined as Viewer and requested elevated permissions.
+            </span>
+          </div>
+          <StatusBadge label="Approval required" tone="warning" />
+        </div>
+      )}
 
       {error && (
         <ErrorPanel message={error} onRetry={() => setRefreshTick((t) => t + 1)} />
@@ -149,41 +218,81 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-ww-hairline">
-              {users.map((u) => (
-                <tr key={u._id} className="hover:bg-ww-raised/40">
-                  <td className="px-5 py-3.5">
-                    <p className="font-medium text-ww-fg">{u.name}</p>
-                    <p className="font-mono text-[12px] text-ww-fg-muted">
-                      {u.email}
-                    </p>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <StatusBadge
-                      label={u.role}
-                      tone={u.role === "Organization Admin" ? "accent" : "neutral"}
-                    />
-                  </td>
-                  <td className="px-5 py-3.5 text-ww-fg-secondary">
-                    {u.role === "Department Manager"
-                      ? u.departmentNames.length
-                        ? u.departmentNames.join(", ")
-                        : "Unassigned"
-                      : "Organization-wide"}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <StatusBadge
-                      label={u.status}
-                      tone={u.status === "Active" ? "positive" : "negative"}
-                    />
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <Button variant="outline" size="sm" onPress={() => openEdit(u)}>
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {users.map((u) => {
+                const hasPending =
+                  u.requestStatus === "Pending" && Boolean(u.requestedRole);
+                return (
+                  <tr key={u._id} className="hover:bg-ww-raised/40">
+                    <td className="px-5 py-3.5">
+                      <p className="font-medium text-ww-fg">{u.name}</p>
+                      <p className="font-mono text-[12px] text-ww-fg-muted">
+                        {u.email}
+                      </p>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <StatusBadge
+                          label={u.role}
+                          tone={u.role === "Organization Admin" ? "accent" : "neutral"}
+                        />
+                        {hasPending && u.requestedRole && (
+                          <StatusBadge
+                            label={`Requested: ${u.requestedRole}`}
+                            tone="warning"
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-ww-fg-secondary">
+                      {u.role === "Department Manager"
+                        ? u.departmentNames.length
+                          ? u.departmentNames.join(", ")
+                          : "Unassigned"
+                        : "Organization-wide"}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <StatusBadge
+                        label={u.status}
+                        tone={u.status === "Active" ? "positive" : "negative"}
+                      />
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                        {hasPending && (
+                          <>
+                            <Button
+                              size="sm"
+                              onPress={() => handleQuickRequestAction(u, "approve")}
+                              className="h-8 bg-ww-fg px-2.5 text-[12px] text-ww-bg"
+                            >
+                              <Check className="mr-1 h-3.5 w-3.5" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onPress={() => handleQuickRequestAction(u, "dismiss")}
+                              className="h-8 px-2.5 text-[12px]"
+                            >
+                              <Xmark className="mr-1 h-3.5 w-3.5" />
+                              Keep Viewer
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onPress={() => openEdit(u)}
+                          className="h-8 px-2.5 text-[12px]"
+                        >
+                          <Pencil className="mr-1 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -196,6 +305,23 @@ export default function UsersPage() {
         onClose={() => setEditing(null)}
       >
         <form onSubmit={handleSave} className="space-y-4">
+          {editing?.requestStatus === "Pending" && editing?.requestedRole && (
+            <div className="flex items-center justify-between gap-2 rounded-[8px] border border-ww-warning/40 bg-ww-warning-soft/50 px-3 py-2 text-[12px] text-ww-fg">
+              <span>
+                Requested role: <strong>{editing.requestedRole}</strong>
+              </span>
+              {editRole !== editing.requestedRole && (
+                <button
+                  type="button"
+                  onClick={() => setEditRole(editing.requestedRole as UserRole)}
+                  className="font-medium text-ww-accent underline underline-offset-2"
+                >
+                  Apply {editing.requestedRole}
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] text-ww-fg-secondary">
@@ -236,22 +362,28 @@ export default function UsersPage() {
                 Authorized departments
               </p>
               <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-[8px] border border-ww-hairline bg-ww-bg p-3">
-                {departments.map((d) => (
-                  <label
-                    key={d._id}
-                    className="flex cursor-pointer items-center gap-2 text-[13px] text-ww-fg"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={editDepts.includes(d._id)}
-                      onChange={() => toggleDept(d._id)}
-                    />
-                    <span className="truncate">{d.name}</span>
-                    <span className="ml-auto font-mono text-[11px] text-ww-fg-muted">
-                      {d.code}
-                    </span>
-                  </label>
-                ))}
+                {departments.length === 0 ? (
+                  <p className="py-2 text-center text-[12px] text-ww-fg-muted">
+                    No departments created in this organization yet.
+                  </p>
+                ) : (
+                  departments.map((d) => (
+                    <label
+                      key={d._id}
+                      className="flex cursor-pointer items-center gap-2 text-[13px] text-ww-fg"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={editDepts.includes(d._id)}
+                        onChange={() => toggleDept(d._id)}
+                      />
+                      <span className="truncate">{d.name}</span>
+                      <span className="ml-auto font-mono text-[11px] text-ww-fg-muted">
+                        {d.code}
+                      </span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
           )}
